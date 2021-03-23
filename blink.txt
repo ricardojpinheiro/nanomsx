@@ -1,0 +1,39 @@
+Blink.inc document file by Kari Lammassaari 1997
+ 
+This file contains Constants,Types, Variables and following procedures:
+
+Const Vdp14 = 13; {Blink rate register in vdp}
+      Vdp13 = 12; {Blink colors High nibble = foreground}
+    
+      White = 15;    Grey  = 14;  Purple  = 13; DGreen  = 12; LYellow = 11;
+      DYellow = 10;  LRed  =  9;  Mred    =  8; Cyan    =  7; DRed    =  6;
+      LBlue   = 5;   DBlue  = 4;  LGreen  =  3; MGreen  =  2; Black   =  1;
+      Transp  = 0;
+
+      SetB = True; ResB = False; {Switch values for setbit }
+
+Var ColTbl :Array[0..255] Of Byte;
+    TXTCOL :Integer Absolute $f3b5;  {Blink table addr}
+
+
+  - BlinkChar(Column,Row:Byte);
+  - ClearBlinkChar(Column,Row:Byte);
+  - Blink(Column,Row,BlinkLenght:Byte);
+  - ClearBlink(Column,Row,BlinkLenght:Byte);
+  - ClearAllBlinks;
+  - SetBlinkRate(OnTime,OffTime:Byte); Time values 0 - 15
+  - SetBlinkColors(ForeGroundColor,BackGroundColor:Byte);
+  - Procedure CursorBlink(Len:Byte);
+     {Sets a blinking block starting from current cursor location. }
+     {Moving cursor to annother location does NOT remove the blinking. Use
+      ClearCursorBlink before moving the cursor. }
+
+  - Procedure ClearCursorBlink(Len:Byte);
+     {Removes the blin at the cursor location}
+
+            * * *	
+
+  - _WrtVdp(Register,Value:Byte);
+    {Used internally.}
+    {Does NOT update system variables}
+

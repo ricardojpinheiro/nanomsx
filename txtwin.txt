@@ -1,0 +1,76 @@
+{TxtWin.inc doc-file by Kari Lammassaari }
+
+Txtwin.inc creates a dynamic text windows with borders and header strings
+on normal text screen (width 80), start address 0 in VRAM. 
+The underlying screen is saved onto heap ans the screen is restored after 
+the erasure of the window.
+The windows can be scrolled up/down.
+The windows can be written/cleared.
+Each window stores their cursor positions during writing process.
+
+The txtwin.inc NEEDS following inc. files (available at ftp.funet.fi and at
+home page of Manuel Bilderbeek): 
+ 
+ -  READVRAM.INC 
+ -  WRTVRAM.INC
+ -  FILLVRAM.INC
+
+The txtwin.inc contains following global types, functions and procedures:
+
+ -  Pointer   = ^Byte;              { Used with heap management) 
+ -  String255 = String[255];
+ -  String80  = String[80];
+
+- Function  MakeWindow(Col,Row,Width,Height:Byte;Header:StringType):Pointer;
+
+   Col,Row refers the column and the row of the upper left corner of the window.
+   MakeWindow stores the underlying screen onto heap. NO checking of the 
+   available memory. NO checking of the screen bounds ie. does the window spread
+   over the screen borders.
+   The structure of heap record:  offset 0  = column of the upper left corner
+                                         1  = row    of the upper left corner
+                                         2  = length of the window
+                                         3  = height of the window
+                                         4  = the cursor column of the window
+                                         5  = the cursor row of the window
+                                         6  = underlying screen data
+                                         .
+                                         .
+
+ - Procedure EraseWindow(WindowPtr:Pointer);
+  
+    Removes window and restores underlying screen. Frees allocated heap memory.
+
+ - Procedure ScrollWindowUp(WindowPtr:Pointer);
+
+    Scrolls window up one row and writes an empty line on the bottom of 
+    the window.
+
+ - Procedure ScrollWindowDown(WindowPtr:Pointer);
+
+    Scrolls window down one row and writes an empty line on the top of 
+    the window.
+
+ - Procedure WritelnWindow(WindowPtr:Pointer;St:String255);
+
+    Writes a string with a linefeed on the window, updates the cursor 
+    coordinates of the window . Scrolls window if necessary.
+
+ - Procedure WriteWindow(WindowPtr:Pointer;St:String255);
+
+    Writes a string without a linefeed on the window, updates the cursor 
+    coordinates of the window . Scrolls window if necessary.
+
+ - Procedure GotoWindowXY(WindowPtr:Pointer;Col,Row:Byte);
+
+    Sets the window cursor position to Col,Row. NO checking of the validity
+    of coordinates.
+
+ - Procedure ClrEolWindow(WindowPtr:Pointer);
+
+    Clears a window row from the current location of the window cursor.
+
+- Procedure ClrWindow(WindowPtr:Pointer);
+
+   Clears the window. (Does NOT remove window form the screen.)
+   Set Window cursor coordinates at 1,1 = upper left corner.

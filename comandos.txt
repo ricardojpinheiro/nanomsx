@@ -1,0 +1,11 @@
+e, Control-E, j, Control-N, ENTER, seta pra baixo - avança uma linha.
+y, Control-Y, k, Control-K, Control-P - retrocede uma linha.
+f, Control-F, Control-V ou espaço - avança uma tela.
+b, Control-B - retrocede uma tela.
+
+/<padrão> - busca o padrão pra frente.
+?<padrão> - busca o padrão pra trás.
+&<padrão> - Exibe apenas as linhas que tem aquele padrão.
+n - Procura a próxima ocorrência do padrão.
+N - Procura a ocorrência anterior do padrão.
+q - sai.
