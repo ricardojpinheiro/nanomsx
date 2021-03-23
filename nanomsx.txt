@@ -1,0 +1,19 @@
+ x título - colocar nome do editor no canto esquerdo da tela.
+ x título - colocar como titulo da janela o nome do arquivo
+ x janela acaba na 20a linha.
+ x Colocar 2 linhas de comandos embaixo.
+ x linha de status fica sobre a barra de baixo da janela.
+ x fazer rotina de centralização desse texto da linha de status.
+ x retirar o marcador de linha e coluna do canto superior direito.
+ x fazer uma rotina para informar linha e coluna na linha de status (^C).
+ x usar blink e inverter o título e exatamente a linha de status - associar essa rotina com as atualizações de status.
+ x fazer a janela de help, destacando os comandos que não estão implementados ainda.
+ x rotina para janelas - posicionar o título na mesma posição, não centralizar.
+ - nome do arquivo - salvar numa variável e usar a rotina para enganar o TP3 (CP/M) e passar diretórios.
+ - arquivo - se não tiver nome do arquivo, crie um arquivo novo.
+ x na saída, limpar todos os blinks.
+ 
+ 
+ 
+ 
+ - colocar um easter egg - passa um parâmetro e vem aquele GNU nano em ASCII art.
