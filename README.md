@@ -1,6 +1,9 @@
 ﻿# nanomsx
 A GNU nano-like text editor for MSX 2.
 It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse&diff=1&id=Qed-Pascal), and our main approach is to have almost all useful GNU nano funcionalities.
+## Command-line parameters
+- /h - Show command line help.
+- /v - Show nanoMSX version.
 
 ## Keystrokes already created
  - Control-S - Save current file
@@ -39,6 +42,6 @@ It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse
  - Any keystrokes regarding mark/unmark/copy/move blocks of text.
 
 ## To the future.
-I hope I can use MSX 2 VRAM (almost all of them) in order to have the file into memory.
+I hope I can use MSX 2 VRAM (almost all of them) in order to save the file into memory.
 
 MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.
