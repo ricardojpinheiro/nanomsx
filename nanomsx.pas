@@ -8,56 +8,6 @@
 
 program nanoMSX;
 
-const
-    CONTROLA    = 1;
-    CONTROLB    = 2;
-    CONTROLC    = 3;
-    CONTROLD    = 4;
-    CONTROLE    = 5;
-    CONTROLF    = 6;
-    CONTROLG    = 7;
-(*    CONTROLH    = 8; *)
-(*    CONTROLI    = 9; *)
-    CONTROLJ    = 10;
-(*    CONTROLK    = 11; *)
-(*    CONTROLL    = 12; *)
-(*    CONTROLM    = 13; *)
-    CONTROLN    = 14;
-    CONTROLO    = 15;
-    CONTROLP    = 16;
-    CONTROLQ    = 17;
-(*    CONTROLR    = 18; *)
-    CONTROLS    = 19;
-    CONTROLT    = 20;
-    CONTROLU    = 21;
-    CONTROLV    = 22;
-    CONTROLW    = 23;
-(*    CONTROLX    = 24; *)
-    CONTROLY    = 25;
-    CONTROLZ    = 26;
-    BS          = 8;
-    TAB         = 9;
-    HOME        = 11;
-    CLS         = 12;
-    ENTER       = 13;
-    INSERT      = 18;
-    SELECT      = 24;
-    ESC         = 27;
-    RightArrow  = 28;
-    LeftArrow   = 29;
-    UpArrow     = 30;
-    DownArrow   = 31;
-    Space       = 32;
-    DELETE      = 127;
-
-type
-    str80               = string [80];
-    linestring          = string [128];
-    lineptr             = ^linestring;
-    KeystrokeLines      = (main, search, replace, align);
-    Directions          = (forwardsearch, backwardsearch);
-    LocationOptions     = (Position, HowMany);
-
 {$i d:conio.inc}
 {$i d:dos.inc}
 {$i d:dos2err.inc}
@@ -66,6 +16,7 @@ type
 {$i d:fillvram.inc}
 {$i d:txtwin.inc}
 {$i d:blink.inc}
+{$i d:nanomsx.inc}
 
 const
     maxlines    = 230;
@@ -83,7 +34,7 @@ var
     textfile:           text;
     searchstring,
     replacestring:      str80;
-    filename:           TFileName;
+    filename:           linestring;
     savedfile,
     insertmode:         boolean;
     tempnumber0:        string[6];
@@ -96,144 +47,7 @@ var
    
     EditWindowPtr,
     StatusWindowPtr:    Pointer;
-   
-function Readkey: char;
-var
-    bt: integer;
-    qqc: byte absolute $FCA9;
- 
-begin
-    Readkey := chr(0);
-    qqc := 1;
-    Inline($f3/$fd/$2a/$c0/$fc/$DD/$21/$9F/00/$CD/$1c/00/$32/bt/$fb);
-    Readkey := chr(bt);
-    qqc := 0;
-end;
-
-(* Finds the last occurence of a char into a string. *)
-
-function RPos(Character: char; Phrase: TString): integer;
-var
-    i: byte;
-    Found: boolean;
-begin
-    i := length(Phrase);
-    Found := false;
-    repeat
-        if Phrase[i] = Character then
-        begin
-            RPos := i + 1;
-            Found := true;
-        end;
-        i := i - 1;
-    until Found;
-    if Not Found then RPos := 0;
-end;
-
-(* Finds the first occurence of a char which is different into a string. *)
-
-function DifferentPos(Character: char; Phrase: TString): byte;
-var
-    i: byte;
-    Found: boolean;
-begin
-    i := 1;
-    Found := false;
-    repeat
-        if Phrase[i] <> Character then
-        begin
-            DifferentPos := i;
-            Found := true;
-        end;
-        i := i + 1;
-    until (Found) or (i >= length(Phrase));
-    if Not Found then DifferentPos := 0;
-end;
-
-(* Finds the last occurence of a char which is different into a string. *)
-
-function RDifferentPos(Character: char; Phrase: TString): integer;
-var
-    i: byte;
-    Found: boolean;
-    
-begin
-    i := length(Phrase);
-    Found := false;
-    repeat
-        if Phrase[i] <> Character then
-        begin
-            RDifferentPos := i;
-            Found := true;
-        end;
-        i := i - 1;
-    until Found or (i <= 1);
-    if Not Found then RDifferentPos := 0;
-end;
-
-procedure CheatAPPEND (FileName: TFileName);
-var
-    i, FirstTwoDotsFound, LastBackSlashFound: byte;
-    APPEND: string[7];
-    Path, Temporary: TFileName;
-begin
-
-(* Initializing some variables... *)
-
-    fillchar(Path, sizeof(Path), ' ' );
-    fillchar(Temporary, sizeof(Temporary), ' ' );
-    APPEND[0] := 'A';   APPEND[1] := 'P';   APPEND[2] := 'P';
-    APPEND[3] := 'E';   APPEND[4] := 'N';   APPEND[5] := 'D';
-    APPEND[6] := #0;
-    
-(*  Sees if in the path there is a ':', used with drive letter. *)    
-    
-    FirstTwoDotsFound := Pos (chr(58), FileName);
-
-(*  If there is a two dots...  *)
-    
-    if FirstTwoDotsFound <> 0 then
-    begin
-    
-(*  Let me see where is the last backslash character...  *)
-
-        LastBackSlashFound := RPos (chr(92), FileName);
-        Path := copy (FileName, 1, LastBackSlashFound);
-
-(*  Copy the path to the variable. *)
-        
-        for i := 1 to LastBackSlashFound - 1 do
-            Temporary[i - 1] := Path[i];
-        Temporary[LastBackSlashFound] := #0;
-        Path := Temporary;
-
-(*  Sets the APPEND environment variable. *)
-        
-        with Registers do
-        begin
-            B := sizeof (Path);
-            C := ctSetEnvironmentItem;
-            HL := addr (APPEND);
-            DE := addr (Path);
-        end;
-        MSXBDOS (Registers);
-    end;
-end;
-
-(* Here we use MSX-DOS 2 to do the error handling. *)
-
-procedure ErrorCode (ExitsOrNot: boolean);
-var
-    ErrorCodeNumber: byte;
-    ErrorMessage: TMSXDOSString;
-    
-begin
-    ErrorCodeNumber := GetLastErrorCode;
-    GetErrorMessage (ErrorCodeNumber, ErrorMessage);
-    WriteLn (ErrorMessage);
-    if ExitsOrNot = true then
-        Exit;
-end;
+    MSXDOSversion:      TMSXDOSVersion;
 
 Procedure CursorOn;
 Begin
@@ -397,7 +211,7 @@ begin
             end;
         end;
         
-(*  Resolver depois: Se o arquivo for grande demais pro editor, ler 
+(*  Problema: Se o arquivo for grande demais pro editor, ler 
 *   somente a parte que dá pra ler e parar.*)
         
         str(currentline - 1, tempnumber0);
@@ -445,27 +259,16 @@ begin
 
 (*  Some variables. *)   
 
-    currentline     := 1;
-    column          := 1;
-    screenline      := 1;
-    highestline     := 1;
-    NewBuffer(emptyline);
-    emptyline^      := '';
-    searchstring    := '';
-    replacestring   := '';
-    insertmode      := false;
+    currentline     := 1;   column  := 1;           screenline  := 1;
+    highestline     := 1;   NewBuffer(emptyline);   emptyline^  := '';
+    searchstring    := '';  replacestring   := '';  insertmode  := false;
     savedfile       := false;
 
 (*  Set new function keys. *)
 
-    SetFnKey(1, chr(7));
-    SetFnKey(2, chr(26));
-    SetFnKey(3, chr(15));
-    SetFnKey(4, chr(10));
-    SetFnKey(5, chr(3));
-    SetFnKey(6, chr(23));
-    SetFnKey(7, chr(20));
-    SetFnKey(8, chr(17));
+    SetFnKey(1, chr(7));    SetFnKey(2, chr(26));   SetFnKey(3, chr(15));
+    SetFnKey(4, chr(10));   SetFnKey(5, chr(3));    SetFnKey(6, chr(23));
+    SetFnKey(7, chr(20));   SetFnKey(8, chr(17));
 
     for i := 1 to maxwidth do
         tabset[i] := (i mod 8) = 1;
@@ -496,12 +299,6 @@ begin
     WritelnWindow(StatusWindowPtr, 'DEL - Delete character under cursor| SELECT+Q - Next occurrence backward');
     WritelnWindow(StatusWindowPtr, 'SELECT-DEL - Delete current line   | Ctrl+T - Go to specified line (F7)');
     WritelnWindow(StatusWindowPtr, 'SELECT-D - Report line/word/char count');
-{
-    WritelnWindow(StatusWindowPtr, '');
-    WritelnWindow(StatusWindowPtr, '');
-    WritelnWindow(StatusWindowPtr, '');
-    WritelnWindow(StatusWindowPtr, '');
-}
     c := readkey;
     EraseWindow(StatusWindowPtr);
 end;
@@ -536,7 +333,7 @@ begin
         if insertmode then
             quick_display(1, screenline, linebuffer [currentline]^);
 
-(* ding the bell when close to the end of a line *)
+(* A little delay when you are close to the end of a line *)
 
         if column >= 78 then
             delay(10);
@@ -898,72 +695,7 @@ begin
     linebuffer[currentline] := emptyline;
     CursorOn;
 end;
-{
-procedure locate;
-var
-    pointer, position, len          : integer;
-    c                               : char;
 
-begin
-    SetBlinkRate (5, 0);
-    temp := 'String to be located: ';
-    j := length (temp);
-    StatusWindowPtr := MakeWindow (1, 12, 79, 3, 'Search');
-    GotoWindowXY (StatusWindowPtr, 1, 1);
-    WriteWindow(StatusWindowPtr, temp);
-    GotoWindowXY (StatusWindowPtr, j + 1, 1);
-    temp := '';
-    readln(temp);
-
-    if temp <> '' then
-        searchstring := temp;
-    len := length (searchstring);
-
-    if len = 0 then
-    begin
-        BeginFile;
-        exit;
-    end;
-
-    temp := 'Searching... ';
-    j := length (temp);
-    GotoXY (1, maxlength + 2);
-    ClrEol;
-    Write(temp);
-
-    StatusWindowPtr := MakeWindow (1, 2, 79, 22, 'Located strings:');
-    GotoWindowXY (StatusWindowPtr, 1, 1);
-
-    for i := 1 to highestline do
-    begin
-    (* look for matches on this line *)
-        pointer := pos (searchstring, linebuffer [i]^);
-
-   (* if there was a match then get ready to print it *)
-        if (pointer > 0) then
-        begin
-            temp := linebuffer [i]^;
-            position := pointer;
-            WritelnWindow(StatusWindowPtr, copy(temp, 1, 79));
-
-        (* print all of the matches on this line *)
-            while pointer > 0 do
-            begin
-                temp := copy (temp, pointer + len + 1, 128);
-                pointer := pos (searchstring, temp);
-                position := position + pointer + len;
-            end;
-
-        (* go to next line and keep searching *)
-        end;
-    end;
-
-    WritelnWindow(StatusWindowPtr, 'End of locate.  Press any key to exit...');
-    c := readkey;
-    ClrWindow(StatusWindowPtr);
-    BeginFile;
-end;
-}
 procedure WhereIs (direction: Directions; nextoccurrence: boolean);
 var
     pointer, len        : integer;
@@ -973,7 +705,7 @@ var
 begin
     DisplayKeys (search);
 
-(*  Não está funcionando continuar a busca de trás pra frente. *)
+(*  Problema: Não está funcionando continuar a busca de trás pra frente. Verificar. *)
     
     if NOT nextoccurrence OR (searchstring = '') then
     begin
@@ -1119,7 +851,7 @@ begin
 
             ClearBlink(column + 1, screenline + 1, searchlength);
 
-(*      Problema: Na execução do replace, *)
+(* Problema: Na execução do replace, *)
             
             case ord (choice) of
             CONTROLC:          begin
@@ -1165,7 +897,6 @@ procedure AlignText;
 var
     lengthline, blankspaces: byte;
     justifyvector: array [1..maxwidth] of byte;
-
     k, l: byte;
 
 begin
@@ -1174,7 +905,7 @@ begin
     temp := linebuffer[currentline]^;
     lengthline := length(temp);
     
-(*  Remove espacos em branco no inicio e no fim do texto. *)    
+(*  Remove blank spaces in the beginning and in the end of the line. *)
         
     i := DifferentPos   (chr(32), temp) - 1; 
     j := RDifferentPos  (chr(32), temp) + 1;
@@ -1196,28 +927,28 @@ begin
 
     case ord(c) of
         76, 108:    begin
-(* left *)
+(* left - L *)
                         blankspaces := (maxwidth - lengthline) + 1;
                         for i := 1 to blankspaces do
                             insert(#32, temp, lengthline + 1);
                     end;
         82, 114:    begin
-(* right *)        
+(* right - R *)        
                         blankspaces := (maxwidth - lengthline);
                         for i := 1 to blankspaces do
                             insert(#32, temp, 1);
                     end;
         67, 99:     begin
-(* center *)
+(* center - C *)
                         blankspaces := (maxwidth - lengthline) div 2;
                         for i := 1 to blankspaces do
                             insert(#32, temp, 1);                        
                     end;
         74, 106:    begin
-(* justify *)
+(* justify - J *)
                         j := 1;
                         
-(*  Localiza os espaços em branco na frase e salva suas posições. *)                        
+(*  Find all blank spaces in the phrase and save their positions. *)
                         
                         for i := 1 to (RDifferentPos(chr(32), temp)) do
                             if ord(temp[i]) = 32 then
@@ -1226,7 +957,7 @@ begin
                                 j := j + 1;
                             end;
 
-(*  Insere espaços em branco nas posiçoes armazenadas do vetor anterior. *)                        
+(*  Insert blank spaces in the previous saved vector's positions. *)
                         
                         j := j - 1;
                         k := (maxwidth - lengthline) div j;
@@ -1262,10 +993,10 @@ begin
         DrawScreen(1);
     
     case ord(c) of
-        76, 108: temp := 'Text aligned to the left.';
-        82, 114: temp := 'Text aligned to the right.';
-        67, 99:  temp := 'Text aligned to the center.';
-        74, 106: temp := 'Text justified.';
+        76, 108: temp := 'Text aligned to the left.';   (* L *)
+        82, 114: temp := 'Text aligned to the right.';  (* R *)
+        67, 99:  temp := 'Text aligned to the center.'; (* C *)
+        74, 106: temp := 'Text justified.';             (* K *)
     end;
     
     StatusLine(temp);
@@ -1418,6 +1149,47 @@ begin
     ClearStatusLine;
 end;
 
+procedure CommandLineHelp;
+begin
+    clrscr;
+    FastWriteln('Usage: nanomsx <file> <parameters>');
+    FastWriteln('Text editor.');
+    writeln;
+    FastWriteln('File: Text file which will be edited.');
+    writeln;
+    FastWriteln('Parameters: ');
+{    
+    FastWriteln('/b             - Save backups of existing files.');
+    FastWriteln('/e             - Convert typed tabs to spaces.');
+    FastWriteln('/t <n>         - Make a tab this number of columns wide.');
+    FastWriteln('/n <l> <c>     - Start at line l and column c.');
+    FastWriteln('/t             - Save changes on exit, don''t prompt.');
+}
+    FastWriteln('/h             - Show this help text and exit.');
+    FastWriteln('/v             - Output version information and exit.');
+    writeln;
+    halt;
+end;
+
+(*  Command version.*)
+
+procedure CommandLineVersion;
+begin
+    clrscr;
+    FastWriteln('nanomsx version 0.1'); 
+    FastWriteln('Copyright (c) 2020, 2021 Brazilian MSX Crew.');
+    FastWriteln('Some rights reserved.');
+    writeln;
+    FastWriteln('This editor resembles the GNU nano editor <https://www.nano-editor.org/>,');
+    FastWriteln('using the same look-and-feel and a lot of keystrokes from the previous editor.');
+    writeln;
+    FastWriteln('License GPLv3+: GNU GPL v. 3 or later <https://gnu.org/licenses/gpl.html>');
+    FastWriteln('This is free software: you are free to change and redistribute it.');
+    FastWriteln('There is NO WARRANTY to the extent permitted by law.');
+    writeln;
+    halt;
+end;
+
 procedure handlefunc(keynum: byte);
 var
     key         : byte;
@@ -1461,9 +1233,9 @@ begin
                             case key of
                                 DELETE  : RemoveLine;
                                 TAB     : backtab;
-                                68, 100 : Location  (HowMany);
-                                81, 113 : WhereIs   (backwardsearch, true);
-                                87, 119 : WhereIs   (forwardsearch , true);
+                                68, 100 : Location  (HowMany);              (* D *)
+                                81, 113 : WhereIs   (backwardsearch, true); (* Q *)
+                                87, 119 : WhereIs   (forwardsearch , true); (* W *)
                                 else    delay(10);
                             end;
                         end;
@@ -1478,21 +1250,63 @@ var
     iscommand   : boolean;
 
 begin
+
+(*  If the program are being executed on a MSX 1, exits. *)
+
     if msx_version <= 1 then
     begin
-        writeln('Only MSX 2 and above.');
-        halt;
-    end;
-    
-    if (paramcount <> 1) then
-    begin
-        writeln('Usage: nanomsx FILENAME');
+        writeln('This program needs MSX 2 and above.');
         halt;
     end;
 
+(*  If the program are being executed on a MSX with MSX-DOS 1, exits. *)
+
+    GetMSXDOSVersion (MSXDOSversion);
+
+    if (MSXDOSversion.nKernelMajor < 2) then
+    begin
+        writeln('MSX-DOS 1.x not supported.');
+        halt;
+    end
+    else
+    begin
+        if paramcount = 0 then CommandLineHelp;
+
+(*  Read parameters, and upcase them. *)
+        for i := 1 to paramcount do
+        begin
+            temp := paramstr(i);
+            for j := 1 to length(temp) do
+                temp[j] := upcase(temp[j]);
+
+            if paramcount >= 1 then
+            begin
+                c := temp[2];
+                if temp[1] = '/' then
+                begin
+                    delete(temp, 1, 2);
+
+(*  Parameters. *)
+                    case c of
+                        'H': CommandLineHelp;
+                        'V': CommandLineVersion;
+                    end;
+                end;
+            end;
+        end;
+    end;
+
+(*  The first parameter should be the file. *)
+
     filename := paramstr(1);
+    
+(*  Init text editor routines and variables. *)    
     InitTextEditor;
+    
+(*  Cheats the APPEND environment variable. *)    
     CheatAPPEND(filename);
+    
+(*  Reads file from the disk. *)
     ReadFile(filename);
 
 (* main loop - get a key and process it *)
@@ -1510,4 +1324,4 @@ begin
    until true = false;
    CheatAPPEND(chr(32));
    ClearAllBlinks;
- end.
+end.

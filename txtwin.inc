@@ -5,8 +5,8 @@ Type Pointer   = ^Byte;
 Type String255 = String[255];
      String80  = String[80];
 
-Function  MakeWindow(Col , Row, Width, Height: Byte; Header: String80):Pointer;
- {
+Function MakeWindow (Col, Row, Width, Height: Byte; Header: String80):Pointer;
+{
    MakeWindow stores the underlying screen onto heap. 
    The structure of heap record:  offset 0  = column of the upper left corner
                                          1  = row    of the upper left corner
@@ -16,16 +16,15 @@ Function  MakeWindow(Col , Row, Width, Height: Byte; Header: String80):Pointer;
                                          5  = the cursor row of the window
                                          6  = underlying screen data
                                          .
- }
- Const ULC = #24; URC = #25 ; {UpperLefCorner ..Charnumbers for the Frame}
+}
+Const ULC = #24; URC = #25 ; {UpperLefCorner ..Charnumbers for the Frame}
        DLC = #26; DRC = #27; VERTICAL = #22; HORIZONTAL = #23;
 
-
-    Var pt   :Pointer;
-        at   :Integer Absolute pt;
-        Vram, Ram, Count  :Integer;
-        st   :String[80];
-        a,b  :Byte;
+Var     pt                  :Pointer;
+        at                  :Integer Absolute pt;
+        Vram, Ram, Count    :Integer;
+        st                  :String80;
+        a, b                :Byte;
 
 Begin
     GetMem(pt, Width * Height + 6);
@@ -40,7 +39,6 @@ Begin
         Vram := Vram + 80;
         Ram := Ram + Width;
     End;
-
 (*      FillChar(St,81,Horizontal); {Fill with horizontal line } *)
     FillChar(St, 81, ' ');
     a := (Width - Length(Header)) Div 2;
@@ -51,7 +49,7 @@ Begin
     WriteVram(0, Vram, Addr(St[1]), Width);
 
     FillChar(St, 81, 32); {Fill with space }
-    St[1]       := Vertical;    St[Width]   := Vertical;
+    St[1] := Vertical;    St[Width] := Vertical;
     Vram := Vram + 80;
     For Count := 2 to height - 1 Do
     Begin
