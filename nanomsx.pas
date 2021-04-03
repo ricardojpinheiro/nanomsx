@@ -1155,9 +1155,41 @@ begin
     ClearStatusLine;
 end;
 
+procedure CommandLineBanner;
+begin
+    FastWriteln('                                mmm  mmm  mmmm mmm  mmm ');
+    FastWriteln('                                ###  ###m#""""# ##mm##  ');
+    FastWriteln('##m####m m#####m##m####m m####m ##########m      ####   ');
+    FastWriteln('##"   ## " mmm####"   ####"  "#### ## ## "####m   ##    ');
+    FastWriteln('##    ##m##"""####    ####    #### "" ##     "## ####   ');
+    FastWriteln('##    ####mmm#####    ##"##mm##"##    ###mmmmm#"##  ##  ');
+    FastWriteln('""    "" """" """"    ""  """"  ""    "" """"" """  """ ');
+end;
+
+(*  Command version.*)
+
+procedure CommandLineVersion;
+begin
+    clrscr;
+    CommandLineBanner;
+    FastWriteln('Version 0.1 - Copyright (c) 2020, 2021 Brazilian MSX Crew.');
+    FastWriteln('Some rights reserved.');
+    writeln;
+    FastWriteln('This editor resembles the GNU nano editor <https://www.nano-editor.org>,');
+    FastWriteln('using the same look-and-feel and a lot of keystrokes from GNU nano editor.');
+    writeln;
+    FastWriteln('License GPLv3+: GNU GPL v. 3 or later <https://gnu.org/licenses/gpl.html>');
+    FastWriteln('This is free software: you are free to change and redistribute it.');
+    FastWriteln('There is NO WARRANTY to the extent permitted by law.');
+    writeln;
+    ClearAllBlinks;
+    halt;
+end;
+
 procedure CommandLineHelp;
 begin
     clrscr;
+    CommandLineBanner;
     FastWriteln('Usage: nanomsx <file> <parameters>');
     FastWriteln('Text editor.');
     writeln;
@@ -1170,29 +1202,11 @@ begin
 }
     FastWriteln('/l<l>          - Start at line l.');
     FastWriteln('/c<c>          - Start at column c.');
-    FastWriteln('/t<n>          - Make a tab this number of columns wide.');
+    FastWriteln('/t<n>          - Make a tab this number (n) of columns wide.');
     FastWriteln('/h             - Show this help text and exit.');
     FastWriteln('/v             - Output version information and exit.');
     writeln;
-    halt;
-end;
-
-(*  Command version.*)
-
-procedure CommandLineVersion;
-begin
-    clrscr;
-    FastWriteln('nanomsx version 0.1'); 
-    FastWriteln('Copyright (c) 2020, 2021 Brazilian MSX Crew.');
-    FastWriteln('Some rights reserved.');
-    writeln;
-    FastWriteln('This editor resembles the GNU nano editor <https://www.nano-editor.org>,');
-    FastWriteln('using the same look-and-feel and a lot of keystrokes from GNU nano editor.');
-    writeln;
-    FastWriteln('License GPLv3+: GNU GPL v. 3 or later <https://gnu.org/licenses/gpl.html>');
-    FastWriteln('This is free software: you are free to change and redistribute it.');
-    FastWriteln('There is NO WARRANTY to the extent permitted by law.');
-    writeln;
+    ClearAllBlinks;
     halt;
 end;
 
