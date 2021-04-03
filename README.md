@@ -1,11 +1,15 @@
-﻿# nanomsx
+# nanomsx
 A GNU nano-like text editor for MSX 2.
 It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse&diff=1&id=Qed-Pascal), and our main approach is to have almost all useful GNU nano funcionalities.
 ## Command-line parameters
-- /h - Show command line help.
-- /v - Show nanoMSX version.
+ - /h 		- Show command line help.
+ - /v 		- Show nanoMSX version.
+ - /la          - Start at line a.
+ - /cb          - Start at column b.
+ - /tn          - Make a tab this number (n) of columns wide.
 
 ## Keystrokes already created
+ - Control-P - Read new file
  - Control-S - Save current file
  - Control-O - Save as file (F3)
  - Control+Z - Close and exit from nano (F2)
@@ -38,7 +42,6 @@ It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse
  - SELECT-D - Report line/word/char count
 
 ## Keystrokes not yet created
- - Control-R - Read new file (TODO)
  - Any keystrokes regarding mark/unmark/copy/move blocks of text.
 
 ## To the future.

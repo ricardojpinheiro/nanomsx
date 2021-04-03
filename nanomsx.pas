@@ -24,10 +24,9 @@ const
     maxlength   = 21;
 
 var
-    currentline,
-    highestline,
-    screenline:         byte;
-    column:             byte;
+    currentline, key,
+    highestline, 
+    screenline, column: byte;
     linebuffer:         array [1.. maxlines] of lineptr;
     emptyline:          lineptr;
     tabset:             array [1..maxwidth] of boolean;
@@ -36,10 +35,13 @@ var
     replacestring:      str80;
     filename:           linestring;
     savedfile,
-    insertmode:         boolean;
+    insertmode,
+    iscommand:          boolean;
     tempnumber0:        string[6];
     temp:               linestring;
-    i, j:               integer;
+    i, j, tabnumber,
+    newline, newcolumn,
+    returncode:         integer;
     c:                  char;
 
     Registers:          TRegs;
@@ -60,7 +62,6 @@ Begin
 End;
 
 (* Return true if a key waiting, and the key. *)
-
 procedure GetKey (var key: byte; var iscommand: boolean);
 var
     inkey: char;
@@ -125,7 +126,7 @@ begin
                         BlinkSequence[3] := 22; BlinkSequence[4] := 34;
                         BlinkSequence[5] := 43; BlinkSequence[6] := 55;
                         Line1 := '^G Help ^O Write Out ^W Where Is ^K CUT   ^C Location ~D Line count';
-                        Line2 := '^Z Exit ^R READ FILE ^N Replace  ^U PASTE ^J Align    ^T Go To Line';
+                        Line2 := '^Z Exit ^P Read File ^N Replace  ^U PASTE ^J Align    ^T Go To Line';
                     end;
         search:     begin
                         BlinkLength := 2;
@@ -169,14 +170,32 @@ begin
     new(buf);
 end;
 
-procedure ReadFile (name: str80);
+procedure ReadFile (AskForName: boolean);
 var
     maxlinesnotreached: boolean;
 
 begin
     maxlinesnotreached := false;
+
+    if AskForName then
+    begin
+        GotoXY(1, maxlength + 1);
+        ClrEol;
+        Blink(1, maxlength + 1, maxwidth + 2);
+        temp := concat('File Name to Read: ');
+        FastWrite(temp);
+        read(filename);
+    end;
     
-    assign(textfile, name);
+    i := (maxwidth - length(filename)) div 2;
+    fillchar(temp, sizeof(temp), chr(32));
+    GotoXY(i - 3, 1);
+    FastWriteln(temp);
+
+    GotoXY(i, 1);
+    FastWriteln(filename);
+    
+    assign(textfile, filename);
     {$i-}
     reset(textfile);
     {$i+}
@@ -247,8 +266,8 @@ begin
     SetBlinkColors(ScreenStatus.nBkColor, ScreenStatus.nFgColor);
     SetBlinkRate(5, 0);
     
-    fillchar(temp, sizeof(temp), ' ');
-    EditWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, filename);
+    fillchar(temp, sizeof(temp), chr(32));
+    EditWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, chr(32));
 
     GotoXY(3, 1);
     FastWrite('nanoMSX 0.1');
@@ -270,9 +289,6 @@ begin
     SetFnKey(4, chr(10));   SetFnKey(5, chr(3));    SetFnKey(6, chr(23));
     SetFnKey(7, chr(20));   SetFnKey(8, chr(17));
 
-    for i := 1 to maxwidth do
-        tabset[i] := (i mod 8) = 1;
-
     for i := 1 to maxlines do
         linebuffer[i] := emptyline;
 end;
@@ -284,7 +300,7 @@ begin
     StatusWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, 'Main nanoMSX help text');
     WritelnWindow(StatusWindowPtr, 'Commands:');
     WritelnWindow(StatusWindowPtr, 'Ctrl-S - Save current file         | Ctrl-O - Save as file (F3)');
-    WritelnWindow(StatusWindowPtr, 'Ctrl-R - Read new file (TODO)      | Ctrl+Z - Close and exit from nano (F2)');
+    WritelnWindow(StatusWindowPtr, 'Ctrl-P - Read new file             | Ctrl+Z - Close and exit from nano (F2)');
     WritelnWindow(StatusWindowPtr, 'Ctrl+G - Display help text (F1)    | Ctrl+C - Report cursor position (F5)');
     WritelnWindow(StatusWindowPtr, 'Ctrl+A - To start of line          | Ctrl+Y - One page up');
     WritelnWindow(StatusWindowPtr, 'Ctrl+E - To end of line            | Ctrl+V - One page down');
@@ -581,7 +597,6 @@ begin
     EraseWindow(EditWindowPtr);
 
 (*  Restore function keys. *)
-
     ClearAllBlinks;
     ClrScr;
     
@@ -742,11 +757,9 @@ begin
     begin
     
     (* look for matches on this line *)
-
         pointer := pos (searchstring, linebuffer [i]^);
 
     (* if there was a match then get ready to print it *)
-        
         if (pointer > 0) then
         begin
             currentline := i;
@@ -760,7 +773,6 @@ begin
             column := pointer;
 
     (* Redraw the StatusLine, bottom of the window and display keys *)
-
             ClearStatusLine;
             DisplayKeys (main);
             exit;
@@ -852,7 +864,6 @@ begin
             ClearBlink(column + 1, screenline + 1, searchlength);
 
 (* Problema: Na execução do replace, *)
-            
             case ord (choice) of
             CONTROLC:          begin
                                     ClrEol;
@@ -879,7 +890,6 @@ begin
                                     position + replacementlength;
                                 end;
 (* n, N *)                                
-
             78, 110:            position := pos (searchstring, copy (linebuffer[line]^,
                                 position + length(searchstring) + 1, 128)) +
                                 position + length(searchstring);
@@ -901,12 +911,10 @@ var
 
 begin
 (*  Testar um pouco mais. *)
-
     temp := linebuffer[currentline]^;
     lengthline := length(temp);
     
 (*  Remove blank spaces in the beginning and in the end of the line. *)
-        
     i := DifferentPos   (chr(32), temp) - 1; 
     j := RDifferentPos  (chr(32), temp) + 1;
 
@@ -949,7 +957,6 @@ begin
                         j := 1;
                         
 (*  Find all blank spaces in the phrase and save their positions. *)
-                        
                         for i := 1 to (RDifferentPos(chr(32), temp)) do
                             if ord(temp[i]) = 32 then
                             begin
@@ -958,7 +965,6 @@ begin
                             end;
 
 (*  Insert blank spaces in the previous saved vector's positions. *)
-                        
                         j := j - 1;
                         k := (maxwidth - lengthline) div j;
                         
@@ -1161,10 +1167,10 @@ begin
 {    
     FastWriteln('/b             - Save backups of existing files.');
     FastWriteln('/e             - Convert typed tabs to spaces.');
-    FastWriteln('/t <n>         - Make a tab this number of columns wide.');
-    FastWriteln('/n <l> <c>     - Start at line l and column c.');
-    FastWriteln('/t             - Save changes on exit, don''t prompt.');
 }
+    FastWriteln('/l<l>          - Start at line l.');
+    FastWriteln('/c<c>          - Start at column c.');
+    FastWriteln('/t<n>          - Make a tab this number of columns wide.');
     FastWriteln('/h             - Show this help text and exit.');
     FastWriteln('/v             - Output version information and exit.');
     writeln;
@@ -1180,8 +1186,8 @@ begin
     FastWriteln('Copyright (c) 2020, 2021 Brazilian MSX Crew.');
     FastWriteln('Some rights reserved.');
     writeln;
-    FastWriteln('This editor resembles the GNU nano editor <https://www.nano-editor.org/>,');
-    FastWriteln('using the same look-and-feel and a lot of keystrokes from the previous editor.');
+    FastWriteln('This editor resembles the GNU nano editor <https://www.nano-editor.org>,');
+    FastWriteln('using the same look-and-feel and a lot of keystrokes from GNU nano editor.');
     writeln;
     FastWriteln('License GPLv3+: GNU GPL v. 3 or later <https://gnu.org/licenses/gpl.html>');
     FastWriteln('This is free software: you are free to change and redistribute it.');
@@ -1219,9 +1225,8 @@ begin
         CONTROLN    :   SearchAndReplace;
         CONTROLO    :   WriteOut(true);
         CONTROLS    :   WriteOut(false);
-(*        CONTROLP    : *)
+        CONTROLP    :   ReadFile(true);
         CONTROLQ    :   WhereIs (backwardsearch, false);
-(*        CONTROLR    : Ler novo arquivo. *)
         CONTROLT    :   GoToLine;
 (*        CONTROLU    : Colar conteúdo do buffer. Vai demorar... *)
         CONTROLV    :   PageDown;
@@ -1244,14 +1249,10 @@ begin
 end;
 
 (* main *)
-
-var
-    key         : byte;
-    iscommand   : boolean;
-
 begin
 
 (*  If the program are being executed on a MSX 1, exits. *)
+    newline     := 1;   newcolumn   := 1;   tabnumber   := 8;
 
     if msx_version <= 1 then
     begin
@@ -1260,57 +1261,75 @@ begin
     end;
 
 (*  If the program are being executed on a MSX with MSX-DOS 1, exits. *)
-
     GetMSXDOSVersion (MSXDOSversion);
 
     if (MSXDOSversion.nKernelMajor < 2) then
     begin
-        writeln('MSX-DOS 1.x not supported.');
+        writeln('This program needs MSX-DOS 2 and above.');
         halt;
     end
     else
     begin
-        if paramcount = 0 then CommandLineHelp;
+
+(*  Init text editor routines and variables. *)    
+        InitTextEditor;
+        
+        if paramcount > 0 then
+        begin
 
 (*  Read parameters, and upcase them. *)
-        for i := 1 to paramcount do
-        begin
-            temp := paramstr(i);
-            for j := 1 to length(temp) do
-                temp[j] := upcase(temp[j]);
-
-            if paramcount >= 1 then
+            for i := 1 to paramcount do
             begin
+                temp := paramstr(i);
+                for j := 1 to length(temp) do
+                    temp[j] := upcase(temp[j]);
+
                 c := temp[2];
                 if temp[1] = '/' then
                 begin
                     delete(temp, 1, 2);
 
-(*  Parameters. *)
+    (*  Parameters. *)
                     case c of
                         'H': CommandLineHelp;
                         'V': CommandLineVersion;
+                        'L': val(copy(temp, 1, length(temp)), newline,      returncode);
+                        'C': val(copy(temp, 1, length(temp)), newcolumn,    returncode);
+                        'T': val(copy(temp, 1, length(temp)), tabnumber,    returncode);
                     end;
                 end;
+            end;
+
+(* The first parameter should be the file. *)
+            filename    := paramstr(1);
+        
+(* Cheats the APPEND environment variable. *)    
+            CheatAPPEND(filename);
+        
+(* Reads file from the disk. *)
+            ReadFile(false);
+
+            if newcolumn <> column then
+                column  := newcolumn;
+        
+            if newline <> currentline then
+            begin
+                currentline := newline;
+                if newline >= (maxlength - 1) then
+                begin
+                    screenline  := maxlength - 1;
+                    DrawScreen(1);
+                end
+                else
+                    screenline := newline;
             end;
         end;
     end;
 
-(*  The first parameter should be the file. *)
-
-    filename := paramstr(1);
-    
-(*  Init text editor routines and variables. *)    
-    InitTextEditor;
-    
-(*  Cheats the APPEND environment variable. *)    
-    CheatAPPEND(filename);
-    
-(*  Reads file from the disk. *)
-    ReadFile(filename);
+    for i := 1 to maxwidth do
+        tabset[i] := (i mod tabnumber) = 1;
 
 (* main loop - get a key and process it *)
-
     repeat
         GotoWindowXY(EditWindowPtr, column, screenline);
         CursorOn;
@@ -1320,8 +1339,8 @@ begin
             handlefunc(key)
         else
             character(chr(key));
-
-   until true = false;
-   CheatAPPEND(chr(32));
-   ClearAllBlinks;
+    until true = false;
+    
+    CheatAPPEND(chr(32));
+    ClearAllBlinks;
 end.
