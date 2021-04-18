@@ -1,32 +1,27 @@
-(* nanomsx
+(* milli
  * This wannabe GNU nano-like text editor is based on Qed-Pascal
  * (http://texteditors.org/cgi-bin/wiki.pl?action=browse&diff=1&id=Qed-Pascal).
  * Our main approach is to have all GNU nano funcionalities. 
  * MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.
  *)
 
-program nanoMSX;
+program milli;
 
 {$i d:conio.inc}
 {$i d:dos.inc}
 {$i d:dos2err.inc}
-{$i d:fastwrit.inc}
-{$i d:readvram.inc}
 {$i d:fillvram.inc}
+{$i d:readvram.inc}
+{$i d:fastwrit.inc}
+{$i d:milli.inc}
 {$i d:txtwin.inc}
 {$i d:blink.inc}
-{$i d:nanomsx.inc}
-
-const
-    maxlines    = 230;
-    maxwidth    = 78;
-    maxlength   = 21;
 
 var
     currentline, key, highestline, 
     screenline, column:             byte;
+    line, emptyline:                linestring;
     linebuffer:                     array [1.. maxlines] of lineptr;
-    emptyline:                      lineptr;
     tabset:                         array [1..maxwidth] of boolean;
     textfile:                       text;
     searchstring, replacestring:    str80;
@@ -81,7 +76,7 @@ begin
     FillChar(temp, maxwidth + 3, #23);
     temp[1]             := #26;
     temp[maxwidth + 2]  := #27;
-    WriteVram(0, (maxwidth + 2) * maxlength, Addr(temp[1]), maxwidth + 3);
+    WriteVRAM(0, (maxwidth + 2) * maxlength, Addr(temp[1]), maxwidth + 3);
 end;
 
 procedure StatusLine (message: str80);
@@ -153,21 +148,26 @@ end;
 procedure DrawScreen (j: byte);
 begin
     ClrWindow(EditWindowPtr);
-    for i := 1 to (maxlength - j) do
-        quick_display(1 , i, linebuffer [currentline - screenline + i]^);
-end;
 
-procedure NewBuffer (var buf: lineptr);
-begin
-    new(buf);
+    for i := 1 to (maxlength - j) do
+    begin
+        fillchar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, currentline - screenline + i);
+        quick_display(1, i, line);
+    end;
 end;
 
 procedure ReadFile (AskForName: boolean);
 var
+    EndOfRead,
     maxlinesnotreached: boolean;
+    VRAMAddress:        integer;
+    counter:            real;
 
 begin
-    maxlinesnotreached := false;
+    EndOfRead           := false;
+    maxlinesnotreached  := false;
+    counter             := startvram;
 
     if AskForName then
     begin
@@ -179,14 +179,6 @@ begin
         read(filename);
     end;
     
-    i := (maxwidth - length(filename)) div 2;
-    fillchar(temp, sizeof(temp), chr(32));
-    GotoXY(i - 3, 1);
-    FastWriteln(temp);
-
-    GotoXY(i, 1);
-    FastWriteln(filename);
-    
     assign(textfile, filename);
     {$i-}
     reset(textfile);
@@ -196,30 +188,17 @@ begin
         StatusLine('New file')
     else
     begin
-        for i := 1 to maxlines do
-            if (linebuffer[i] <> emptyline) then
-                linebuffer[i]^ := emptyline^;
 
         currentline := 1;
 
-        while not eof (textfile) do
+        while not EndOfRead do
         begin
-
-            if (currentline mod 100) = 0 then
-                write(#13, currentline);
-
-            if linebuffer[currentline] = emptyline then
-                NewBuffer(linebuffer[currentline]);
-
-            readln(textfile, linebuffer [currentline]^);
-
+            EndOfRead := eof(textfile);
+            fillchar(line, sizeof(line), chr(32));
+            readln(textfile, line);
+            counter := counter + length(line) + 1;
+            FromFileToVRAM(line, currentline, counter, EndOfRead);
             currentline := currentline + 1;
-            
-            if (currentline >= maxlines) then
-            begin
-                maxlinesnotreached := true;
-                exit;
-            end;
         end;
         
 (*  Problema: Se o arquivo for grande demais pro editor, ler 
@@ -242,8 +221,6 @@ begin
     column      := 1;
     screenline  := 1;
     insertmode  := true;
-
-    DrawScreen(1);
 end;
 
 procedure InitTextEditor;
@@ -257,39 +234,57 @@ begin
     ClearAllBlinks;
     SetBlinkColors(ScreenStatus.nBkColor, ScreenStatus.nFgColor);
     SetBlinkRate(5, 0);
-    
-    fillchar(temp, sizeof(temp), chr(32));
-    EditWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, chr(32));
-
-    GotoXY(3, 1);
-    FastWrite('nanoMSX 0.1');
-
-    Blink(2, 1, maxwidth);
-
-    DisplayKeys (main);
 
 (*  Some variables. *)   
-
     currentline     := 1;   column  := 1;           screenline  := 1;
-    highestline     := 1;   NewBuffer(emptyline);   emptyline^  := '';
-    searchstring    := '';  replacestring   := '';  insertmode  := false;
-    savedfile       := false;
+    highestline     := 1;   searchstring    := '';  replacestring := '';
+    insertmode  := false;   savedfile       := false;
+    fillchar(temp,      sizeof(temp),       chr(32));
+    fillchar(emptyline, sizeof(emptyline),  chr(32));
+    
+(*  Erasing VRAM. *)
+    fillvram(0, startvram   , 0, $DFFF);
+    fillvram(1, 0           , 0, $FFFF);
+
+(*  Erasing structure. *)    
+    fillchar(structure, sizeof(structure) , 0);
 
 (*  Set new function keys. *)
-
     SetFnKey(1, chr(7));    SetFnKey(2, chr(26));   SetFnKey(3, chr(15));
     SetFnKey(4, chr(10));   SetFnKey(5, chr(3));    SetFnKey(6, chr(23));
     SetFnKey(7, chr(20));   SetFnKey(8, chr(17));
 
-    for i := 1 to maxlines do
-        linebuffer[i] := emptyline;
+end;
+
+procedure InitMainScreen;
+var
+    i: byte;
+    
+begin
+    EditWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, chr(32));
+
+    GotoXY(3, 1);
+    FastWrite('milli 0.2');
+
+    Blink(2, 1, maxwidth);
+    DrawScreen(1);
+    
+    i := (maxwidth - length(filename)) div 2;
+    fillchar(temp, sizeof(temp), chr(32));
+    GotoXY(i - 3, 1);
+    FastWriteln(temp);
+
+    GotoXY(i, 1);
+    FastWriteln(filename);
+
+    DisplayKeys (main);
 end;
 
 procedure Help;
 begin
     ClearStatusLine;
     ClearBlink(1, maxlength + 1, maxwidth + 2);
-    StatusWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, 'Main nanoMSX help text');
+    StatusWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, 'Main milli help text');
     WritelnWindow(StatusWindowPtr, 'Commands:');
     WritelnWindow(StatusWindowPtr, 'Ctrl-S - Save current file         | Ctrl-O - Save as file (F3)');
     WritelnWindow(StatusWindowPtr, 'Ctrl-P - Read new file             | Ctrl+Z - Close and exit from nano (F2)');
@@ -320,32 +315,33 @@ begin
     begin
         GotoWindowXY(EditWindowPtr, column, screenline);
         WriteWindow(EditWindowPtr, inkey);
+        
+        fillchar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, currentline);
 
-        if linebuffer[currentline] = emptyline then
-        begin
-            NewBuffer(linebuffer[currentline]);
-            linebuffer[currentline]^ := '';
-        end;
+        if line = emptyline then
+            FromRAMToVRAM(line, currentline);
 
-        while length(linebuffer[currentline]^) <= column do
-            linebuffer[currentline]^ := linebuffer[currentline]^ + ' ';
+        while length(line) <= column do
+            line := line + ' ';
 
-        insert(inkey, linebuffer [currentline]^, column);
+        insert(inkey, line, column);
         column := column + 1;
 
         if not insertmode then
-            delete(linebuffer [currentline]^, column, 1);
+            delete(line, column, 1);
 
 (* redraw current line if in insert mode *)
 
         if insertmode then
-            quick_display(1, screenline, linebuffer [currentline]^);
+            quick_display(1, screenline, line);
 
 (* A little delay when you are close to the end of a line *)
 
         if column >= 78 then
             delay(10);
     end;
+    FromRAMToVRAM(line, currentline);
     CursorOn;
 end;
 
@@ -375,7 +371,9 @@ end;
 
 procedure EndLine;
 begin
-    column      := length (linebuffer [currentline]^) + 1;
+    fillchar(line, sizeof(line), chr(32));
+    FromVRAMToRAM(line, currentline);
+    column      := length (line) + 1;
     if column > maxwidth then
         column := maxwidth;
 end;
@@ -390,7 +388,9 @@ begin
     begin
         GotoWindowXY(EditWindowPtr, 1, 1);
         ScrollWindowDown(EditWindowPtr);
-        quick_display(1, 1, linebuffer [currentline]^);
+        fillchar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, currentline);
+        quick_display(1, 1, line);
     end
     else
         screenline := screenline - 1;
@@ -409,20 +409,32 @@ begin
         GotoWindowXY(EditWindowPtr, 1, 2);
         ScrollWindowUp(EditWindowPtr);
         screenline := maxlength - 1;
-        quick_display(1, screenline, linebuffer [currentline]^);
+        fillchar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, currentline);
+        quick_display(1, screenline, line);
     end;
 end;
 
 procedure InsertLine;
 begin
+
+(* Problema: Aqui vamos ter que mexer depois. Será necessário criar 
+*  uma rotina para mover os dados na VRAM, para inserir a linha.
+*  Também será necessário uma rotina para remover linhas, fazendo a 
+*  desfragmentação da VRAM. *)
+    
+    fillchar(line, sizeof(line), chr(32));
+    FromVRAMToRAM(line, currentline);
+
     GotoWindowXY(EditWindowPtr, column, screenline + 1);
     InsLineWindow(EditWindowPtr);
-
+{
     for i := highestline + 1 downto currentline do
         linebuffer[i + 1] := linebuffer[i];
-
-    linebuffer[currentline] := emptyline;
-    highestline             := highestline + 1;
+}
+    line        := emptyline;
+    highestline := highestline + 1;
+    FromRAMToVRAM(line, currentline);
 end;
 
 procedure Return;
@@ -437,13 +449,26 @@ end;
 
 procedure deleteline;
 begin
+
+(* Problema: Aqui vamos ter que mexer depois. Será necessário criar 
+*  uma rotina para mover os dados na VRAM, para inserir a linha.
+*  Também será necessário uma rotina para remover linhas, fazendo a 
+*  desfragmentação da VRAM. *)
+
     DelLineWindow(EditWindowPtr);
 
-    if highestline > currentline + (maxlength - screenline) then
-        quick_display(1, maxlength,linebuffer [currentline + ((maxlength + 1) - screenline)]^);
+    fillchar(line, sizeof(line), chr(32));
+    FromVRAMToRAM(line, currentline + ((maxlength + 1) - screenline));
 
-    if linebuffer[currentline] <> emptyline then
-        linebuffer[currentline]^    := emptyline^;
+    if highestline > currentline + (maxlength - screenline) then
+        quick_display(1, maxlength,line);
+
+    fillchar(line, sizeof(line), chr(32));
+    FromVRAMToRAM(line, currentline);
+
+    if line <> emptyline then
+        line := emptyline;
+{
 
     for i := currentline to highestline + 1 do
         linebuffer[i]               := linebuffer [i + 1];
@@ -453,7 +478,8 @@ begin
 
     if currentline > highestline then
         highestline                 := currentline;
- end;
+}
+end;
 
 procedure CursorLeft;
 begin
@@ -494,12 +520,17 @@ end;
 
 procedure del;
 begin
-    if (column > length(linebuffer[currentline]^)) then
+    fillchar(line, sizeof(line), chr(32));
+    FromVRAMToRAM(line, currentline);
+    fillchar(temp, sizeof(temp), chr(32));
+    FromVRAMToRAM(temp, currentline + 1);
+    
+    if (column > length(line)) then
     begin
-        if (length(linebuffer[currentline]^) + length(linebuffer[currentline+1]^)) < maxwidth then
+        if (length(line) + length(temp)) < maxwidth then
         begin
-            linebuffer[currentline]^    := linebuffer[currentline]^ + linebuffer[currentline+1]^;
-            quick_display(1, screenline, linebuffer [currentline]^);
+            line    := line + temp;
+            quick_display(1, screenline, line);
             CursorDown;
             deleteline;
             CursorUp;
@@ -507,20 +538,18 @@ begin
         exit;
     end;
 
-    if linebuffer[currentline] = emptyline then
-    begin
-        NewBuffer(linebuffer[currentline]);
-        linebuffer[currentline]^        := '';
-    end;
+    if line = emptyline then
+        line := '';
 
-    while length(linebuffer[currentline]^) < column do
-        linebuffer[currentline]^        := linebuffer[currentline]^ + ' ';
+    while length(line) < column do
+        line := line + ' ';
 
-    delete(linebuffer [currentline]^, column, 1);
+    delete(line, column, 1);
 
     GotoWindowXY(EditWindowPtr, 1, screenline);
     ClrEolWindow(EditWindowPtr);
-    quick_display(1,screenline,linebuffer [currentline]^);
+    quick_display(1,screenline,line);
+    FromRAMToVRAM(line, currentline);
 end;
 
 procedure backspace;
@@ -567,8 +596,9 @@ begin
     begin
         if (i mod 100) = 0 then
             write(#13, i);
-
-        writeln(textfile, linebuffer [i]^);
+        fillchar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, i);
+        writeln(textfile, line);
     end;
     
     close(textfile);
@@ -621,27 +651,29 @@ end;
 
 procedure PreviousWord;
 begin
+    fillchar(line, sizeof(line), chr(32));
+    FromVRAMToRAM(line, currentline);
 
 (* if i am in a word then skip to the space *)
 
-    while (not ((linebuffer[currentline]^[column] = ' ') or
-               (column >= length(linebuffer[currentline]^) ))) and
+    while (not ((line[column] = ' ') or
+               (column >= length(line) ))) and
          ((currentline <> 1) or
           (column <> 1)) do
       CursorLeft;
 
 (* find end of previous word *)
 
-   while ((linebuffer[currentline]^[column] = ' ') or
-          (column >= length(linebuffer[currentline]^) )) and
+   while ((line[column] = ' ') or
+          (column >= length(line) )) and
          ((currentline <> 1) or
           (column <> 1)) do
       CursorLeft;
 
 (* find start of previous word *)
 
-   while (not ((linebuffer[currentline]^[column] = ' ') or
-               (column >= length(linebuffer[currentline]^) ))) and
+   while (not ((line[column] = ' ') or
+               (column >= length(line) ))) and
          ((currentline <> 1) or
           (column <> 1)) do
       CursorLeft;
@@ -651,18 +683,20 @@ end;
 
 procedure NextWord;
 begin
+    fillchar(line, sizeof(line), chr(32));
+    FromVRAMToRAM(line, currentline);
 
 (* if i am in a word, then move to the whitespace *)
 
-   while (not ((linebuffer[currentline]^[column] = ' ') or
-               (column >= length(linebuffer[currentline]^)))) and
+   while (not ((line[column] = ' ') or
+               (column >= length(line)))) and
          (currentline < highestline) do
       CursorRight;
 
 (* skip over the space to the other word *)
 
-   while ((linebuffer[currentline]^[column] = ' ') or
-          (column >= length(linebuffer[currentline]^))) and
+   while ((line[column] = ' ') or
+          (column >= length(line))) and
          (currentline < highestline) do
       CursorRight;
 end;
@@ -696,10 +730,14 @@ begin
     GotoWindowXY(EditWindowPtr, column, WhereYWindow(EditWindowPtr));
     ClrEolWindow(EditWindowPtr);
 
-    if (linebuffer[currentline] <> emptyline) then
-        linebuffer[currentline]^ := emptyline^;
+    fillchar(line, sizeof(line), chr(32));
+    FromVRAMToRAM(line, currentline);
+    
+    if (line <> emptyline) then
+        line := emptyline;
 
-    linebuffer[currentline] := emptyline;
+    line := emptyline;
+    FromRAMToVRAM(line, currentline);
     CursorOn;
 end;
 
@@ -747,9 +785,11 @@ begin
     
     while i <> stopsearch do
     begin
+        fillchar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, i);        
     
     (* look for matches on this line *)
-        pointer := pos (searchstring, linebuffer [i]^);
+        pointer := pos (searchstring, line);
 
     (* if there was a match then get ready to print it *)
         if (pointer > 0) then
@@ -785,7 +825,7 @@ end;
 
 procedure SearchAndReplace;
 var
-    position, line                      : integer;
+    position, linesearch                : integer;
     searchlength, replacementlength     : byte;
     choice                              : char;
     tempsearchstring                    : str80;
@@ -829,13 +869,16 @@ begin
 
     choice := ' ';    
 
-    for line := 1 to highestline do
+    for linesearch := 1 to highestline do
     begin
-        position := pos (searchstring, linebuffer [line]^);
+        fillchar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, linesearch);        
+        
+        position := pos (searchstring, line);
 
         while (position > 0) do
         begin
-            currentline := line;
+            currentline := linesearch;
             if currentline >= 12 then
                 screenline := 12
             else
@@ -856,6 +899,7 @@ begin
             ClearBlink(column + 1, screenline + 1, searchlength);
 
 (* Problema: Na execução do replace, *)
+            
             case ord (choice) of
             CONTROLC:          begin
                                     ClrEol;
@@ -873,24 +917,25 @@ begin
 * janela, somente se trocar de página. *)
                                 
             65, 97, 89, 121:    begin
-                                    linebuffer[line]^ := copy (linebuffer [line]^, 1, position - 1) +
-                                    replacestring + copy (linebuffer [line]^, 
+                                    line := copy (line, 1, position - 1) +
+                                    replacestring + copy (line, 
                                     position + length (searchstring), 128);
 
-                                    position := pos (searchstring, copy (linebuffer[line]^,
+                                    position := pos (searchstring, copy (line,
                                     position + replacementlength + 1, 128)) + 
                                     position + replacementlength;
                                 end;
 (* n, N *)                                
-            78, 110:            position := pos (searchstring, copy (linebuffer[line]^,
+            78, 110:            position := pos (searchstring, copy (line,
                                 position + length(searchstring) + 1, 128)) +
                                 position + length(searchstring);
             end;
 
             GotoWindowXY(EditWindowPtr, 1, screenline);
             ClrEolWindow(EditWindowPtr);
-            temp := copy(linebuffer[currentline]^, 1, maxlength + 1);
+            temp := copy(line, 1, maxlength + 1);
             WriteWindow(EditWindowPtr, temp);
+            FromRAMToVRAM(line, linesearch);
         end;
     end;
 end;
@@ -903,7 +948,9 @@ var
 
 begin
 (*  Testar um pouco mais. *)
-    temp := linebuffer[currentline]^;
+    fillchar(temp, sizeof(temp), chr(32));
+    FromVRAMToRAM(temp, currentline);
+        
     lengthline := length(temp);
     
 (*  Remove blank spaces in the beginning and in the end of the line. *)
@@ -976,7 +1023,7 @@ begin
                     end;
     end;
     
-    linebuffer[currentline]^ := temp;
+    FromVRAMToRAM(temp, currentline);
     
     DisplayKeys(main);
 
@@ -984,8 +1031,13 @@ begin
 
     if screenline < (maxlength - 1) then
     begin
-        quick_display(1, screenline, linebuffer[currentline]^);
-        quick_display(1, screenline + 1, linebuffer[currentline + 1]^);
+        fillchar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, currentline);
+        quick_display(1, screenline, line);
+        
+        fillchar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, currentline + 1);
+        quick_display(1, screenline + 1, line);
     end
     else
         DrawScreen(1);
@@ -1013,7 +1065,7 @@ var
     NoPrint, Print, AllChars: ASCII;
 
 begin
-    fillchar(temp, sizeof(temp), #32);
+    fillchar(temp, sizeof(temp), chr(32));
 
 (*  Line count - Calculating percentage. *)    
 
@@ -1031,12 +1083,14 @@ begin
     begin
 
 (*  Column count. *)  
+        fillchar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, currentline);
 
-        j := length(linebuffer[currentline]^) + 1;
+        j := length(line) + 1;
 
 (*  Calculating percentage. *)        
 
-        str(column  , tempnumber0);
+        str(column, tempnumber0);
         str(j, tempnumber1);
    
         i := ((column * 100) div j);
@@ -1050,13 +1104,13 @@ begin
     abovechar := 0;
     
     for i := 1 to currentline - 1 do
-        abovechar := abovechar + length(linebuffer[i]^);
+        abovechar := abovechar + length(line);
 
     totalchar := abovechar;
     abovechar := abovechar + column;
     
     for i := currentline to highestline do
-        totalchar := totalchar + length(linebuffer[i]^);
+        totalchar := totalchar + length(line);
     
 (*  Calculating percentage. *)
 
@@ -1088,7 +1142,8 @@ begin
 
         for i := 1 to highestline do
         begin
-            temp2   := linebuffer[i]^;
+            fillchar(temp2, sizeof(temp2), chr(32));
+            FromVRAMToRAM(temp2, i);
             for j   := 1 to length(temp2) do
                 if (temp2[j] = chr(32)) and (ord(temp2[j + 1]) in Print) and (j > 1) then
                     TotalWords := TotalWords + 1;
@@ -1128,8 +1183,10 @@ begin
  
     if destline >= highestline then
         destline := highestline;
-        
-    i := length(linebuffer[destline]^);
+    
+    fillchar(line, sizeof(line), chr(32));
+    FromVRAMToRAM(line, destline);    
+    i := length(line);
     
     if destcolumn > i then
         destcolumn := i;
@@ -1147,13 +1204,13 @@ end;
 
 procedure CommandLineBanner;
 begin
-    FastWriteln('                                         mmm  mmm    mmmmmmmmmmm  mmm ');
-    FastWriteln('                                         ###  ###  m#"""""    ##mm##  ');
-    FastWriteln(' ##m####m   m#####m  ##m####m   m####m   ########  ##m         ####   ');
-    FastWriteln(' ##"   ##   " mmm##  ##"   ##  ##"  "##  ## ## ##   "####m      ##    ');
-    FastWriteln(' ##    ##  m##"""##  ##    ##  ##    ##  ## "" ##       "##    ####   ');
-    FastWriteln(' ##    ##  ##mmm###  ##    ##  "##mm##"  ##    #####mmmmm#"   ##  ##  ');
-    FastWriteln(' ""    ""   """" ""  ""    ""    """"    ""    """"""""""    """  """ ');
+    FastWriteln('              ##     mmmm      mmmm         ##    ');
+    FastWriteln('              ""     ""##      ""##         ""    ');
+    FastWriteln(' ####m##m   ####       ##        ##       ####    ');
+    FastWriteln(' ## ## ##     ##       ##        ##         ##    ');
+    FastWriteln(' ## ## ##     ##       ##        ##         ##    ');
+    FastWriteln(' ## ## ##  mmm##mmm    ##mmm     ##mmm   mmm##mmm ');
+    FastWriteln(' "" "" ""  """"""""     """"      """"   """""""" ');
 end;
 
 (*  Command version.*)
@@ -1162,7 +1219,7 @@ procedure CommandLineVersion;
 begin
     clrscr;
     CommandLineBanner;
-    FastWriteln('Version 0.1 - Copyright (c) 2020, 2021 Brazilian MSX Crew.');
+    FastWriteln('Version 0.2 - Copyright (c) 2020, 2021 Brazilian MSX Crew.');
     FastWriteln('Some rights reserved.');
     writeln;
     FastWriteln('This editor resembles the GNU nano editor <https://www.nano-editor.org>,');
@@ -1172,6 +1229,11 @@ begin
     FastWriteln('This is free software: you are free to change and redistribute it.');
     FastWriteln('There is NO WARRANTY to the extent permitted by law.');
     writeln;
+    FastWriteln('By the way, the name, ''milli'', may come from two places:');
+    FastWriteln('1 - A unit prefix in the metric system denoting a factor of one thousandth.');
+    FastWriteln('2 - The restaurant at the end of the Universe, called Milliways, from');
+    FastWriteln('the Hitchhiker''s Guide to the Galaxy series, written by Douglas Adams.');
+    FastWriteln('Personally, I would prefer the last one. ');
     ClearAllBlinks;
     halt;
 end;
@@ -1180,7 +1242,7 @@ procedure CommandLineHelp;
 begin
     clrscr;
     CommandLineBanner;
-    FastWriteln('Usage: nanomsx <file> <parameters>');
+    FastWriteln('Usage: milli <file> <parameters>');
     FastWriteln('Text editor.');
     writeln;
     FastWriteln('File: Text file which will be edited.');
@@ -1332,6 +1394,8 @@ begin
 
     for i := 1 to maxwidth do
         tabset[i] := (i mod tabnumber) = 1;
+
+    InitMainScreen;
 
 (* main loop - get a key and process it *)
     repeat
