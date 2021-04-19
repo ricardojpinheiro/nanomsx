@@ -104,7 +104,7 @@ begin
     for i := 2 to 3 do
         ClearBlink(1, maxlength + i, maxwidth);
 
-    fillchar(BlinkSequence, sizeof(BlinkSequence), 0);
+    FillChar(BlinkSequence, sizeof(BlinkSequence), 0);
 
     case whichkey of
         main:       begin
@@ -119,14 +119,14 @@ begin
                         BlinkLength := 2;
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 11;
                         BlinkSequence[3] := 28; BlinkSequence[4] := 41;
-                        Line1 := '^G Help   ~W Next forward  ^Q Backwards ^T Go To Line             ';
-                        Line2 := '^C Cancel ~Q Bext backward ^N Replace   ^X Exit                   ';
+                        Line1 := '^G Help   ~W Next forward  ^Q Backwards ^T Go To Line              ';
+                        Line2 := '^C Cancel ~Q Bext backward ^N Replace   ^X Exit                    ';
                     end;
         replace:    begin
                         BlinkLength := 2;
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 15;
-                        Line1 := ' Y Yes         A All                                              ';
-                        Line2 := ' N No         ^C Cancel                                           ';
+                        Line1 := ' Y Yes         A All                                               ';
+                        Line2 := ' N No         ^C Cancel                                            ';
                     end;
         align:      begin
                         BlinkLength := 2;
@@ -151,7 +151,7 @@ begin
 
     for i := 1 to (maxlength - j) do
     begin
-        fillchar(line, sizeof(line), chr(32));
+        FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, currentline - screenline + i);
         quick_display(1, i, line);
     end;
@@ -194,7 +194,7 @@ begin
         while not EndOfRead do
         begin
             EndOfRead := eof(textfile);
-            fillchar(line, sizeof(line), chr(32));
+            FillChar(line, sizeof(line), chr(32));
             readln(textfile, line);
             counter := counter + length(line) + 1;
             FromFileToVRAM(line, currentline, counter, EndOfRead);
@@ -239,15 +239,15 @@ begin
     currentline     := 1;   column  := 1;           screenline  := 1;
     highestline     := 1;   searchstring    := '';  replacestring := '';
     insertmode  := false;   savedfile       := false;
-    fillchar(temp,      sizeof(temp),       chr(32));
-    fillchar(emptyline, sizeof(emptyline),  chr(32));
+    FillChar(temp,      sizeof(temp),       chr(32));
+    FillChar(emptyline, sizeof(emptyline),  chr(32));
     
 (*  Erasing VRAM. *)
     fillvram(0, startvram   , 0, $DFFF);
     fillvram(1, 0           , 0, $FFFF);
 
 (*  Erasing structure. *)    
-    fillchar(structure, sizeof(structure) , 0);
+    FillChar(structure, sizeof(structure) , 0);
 
 (*  Set new function keys. *)
     SetFnKey(1, chr(7));    SetFnKey(2, chr(26));   SetFnKey(3, chr(15));
@@ -270,7 +270,7 @@ begin
     DrawScreen(1);
     
     i := (maxwidth - length(filename)) div 2;
-    fillchar(temp, sizeof(temp), chr(32));
+    FillChar(temp, sizeof(temp), chr(32));
     GotoXY(i - 3, 1);
     FastWriteln(temp);
 
@@ -278,6 +278,7 @@ begin
     FastWriteln(filename);
 
     DisplayKeys (main);
+    ClearStatusLine;
 end;
 
 procedure Help;
@@ -316,7 +317,7 @@ begin
         GotoWindowXY(EditWindowPtr, column, screenline);
         WriteWindow(EditWindowPtr, inkey);
         
-        fillchar(line, sizeof(line), chr(32));
+        FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, currentline);
 
         if line = emptyline then
@@ -371,7 +372,7 @@ end;
 
 procedure EndLine;
 begin
-    fillchar(line, sizeof(line), chr(32));
+    FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
     column      := length (line) + 1;
     if column > maxwidth then
@@ -388,7 +389,7 @@ begin
     begin
         GotoWindowXY(EditWindowPtr, 1, 1);
         ScrollWindowDown(EditWindowPtr);
-        fillchar(line, sizeof(line), chr(32));
+        FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, currentline);
         quick_display(1, 1, line);
     end
@@ -409,7 +410,7 @@ begin
         GotoWindowXY(EditWindowPtr, 1, 2);
         ScrollWindowUp(EditWindowPtr);
         screenline := maxlength - 1;
-        fillchar(line, sizeof(line), chr(32));
+        FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, currentline);
         quick_display(1, screenline, line);
     end;
@@ -423,7 +424,7 @@ begin
 *  Também será necessário uma rotina para remover linhas, fazendo a 
 *  desfragmentação da VRAM. *)
     
-    fillchar(line, sizeof(line), chr(32));
+    FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
 
     GotoWindowXY(EditWindowPtr, column, screenline + 1);
@@ -457,13 +458,13 @@ begin
 
     DelLineWindow(EditWindowPtr);
 
-    fillchar(line, sizeof(line), chr(32));
+    FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline + ((maxlength + 1) - screenline));
 
     if highestline > currentline + (maxlength - screenline) then
         quick_display(1, maxlength,line);
 
-    fillchar(line, sizeof(line), chr(32));
+    FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
 
     if line <> emptyline then
@@ -520,9 +521,9 @@ end;
 
 procedure del;
 begin
-    fillchar(line, sizeof(line), chr(32));
+    FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
-    fillchar(temp, sizeof(temp), chr(32));
+    FillChar(temp, sizeof(temp), chr(32));
     FromVRAMToRAM(temp, currentline + 1);
     
     if (column > length(line)) then
@@ -592,17 +593,17 @@ begin
     
     filename := tempfilename;
     
-    for i := 1 to highestline + 1 do
+    for i := 1 to highestline do
     begin
         if (i mod 100) = 0 then
             write(#13, i);
-        fillchar(line, sizeof(line), chr(32));
+
+        FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, i);
         writeln(textfile, line);
     end;
-    
+
     close(textfile);
-    
     savedfile := true;
     
     ClearBlink(1, maxlength + 1, maxwidth + 2);
@@ -651,7 +652,7 @@ end;
 
 procedure PreviousWord;
 begin
-    fillchar(line, sizeof(line), chr(32));
+    FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
 
 (* if i am in a word then skip to the space *)
@@ -683,7 +684,7 @@ end;
 
 procedure NextWord;
 begin
-    fillchar(line, sizeof(line), chr(32));
+    FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
 
 (* if i am in a word, then move to the whitespace *)
@@ -730,7 +731,7 @@ begin
     GotoWindowXY(EditWindowPtr, column, WhereYWindow(EditWindowPtr));
     ClrEolWindow(EditWindowPtr);
 
-    fillchar(line, sizeof(line), chr(32));
+    FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
     
     if (line <> emptyline) then
@@ -785,7 +786,7 @@ begin
     
     while i <> stopsearch do
     begin
-        fillchar(line, sizeof(line), chr(32));
+        FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, i);        
     
     (* look for matches on this line *)
@@ -825,10 +826,10 @@ end;
 
 procedure SearchAndReplace;
 var
-    position, linesearch                : integer;
-    searchlength, replacementlength     : byte;
-    choice                              : char;
-    tempsearchstring                    : str80;
+    position, linesearch:               integer;
+    searchlength, replacementlength:    byte;
+    choice:                             char;
+    tempsearchstring:                   str80;
    
 begin
     DisplayKeys (search);
@@ -871,7 +872,7 @@ begin
 
     for linesearch := 1 to highestline do
     begin
-        fillchar(line, sizeof(line), chr(32));
+        FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, linesearch);        
         
         position := pos (searchstring, line);
@@ -942,13 +943,13 @@ end;
 
 procedure AlignText;
 var
-    lengthline, blankspaces: byte;
-    justifyvector: array [1..maxwidth] of byte;
-    k, l: byte;
+    lengthline, k, 
+    blankspaces, l: byte;
+    justifyvector:  array [1..maxwidth] of byte;
 
 begin
 (*  Testar um pouco mais. *)
-    fillchar(temp, sizeof(temp), chr(32));
+    FillChar(temp, sizeof(temp), chr(32));
     FromVRAMToRAM(temp, currentline);
         
     lengthline := length(temp);
@@ -1022,20 +1023,18 @@ begin
 
                     end;
     end;
-    
     FromVRAMToRAM(temp, currentline);
-    
     DisplayKeys(main);
 
 (*  Fica mais rápido redesenhar somente a linha alterada. *)
 
     if screenline < (maxlength - 1) then
     begin
-        fillchar(line, sizeof(line), chr(32));
+        FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, currentline);
         quick_display(1, screenline, line);
         
-        fillchar(line, sizeof(line), chr(32));
+        FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, currentline + 1);
         quick_display(1, screenline + 1, line);
     end
@@ -1055,7 +1054,6 @@ end;
 procedure Location (Types: LocationOptions);
 type
     ASCII = set of 0..255;
-
 var
     tempnumber1, tempnumber2: string[6];
     totalwords              : integer;
@@ -1065,7 +1063,7 @@ var
     NoPrint, Print, AllChars: ASCII;
 
 begin
-    fillchar(temp, sizeof(temp), chr(32));
+    FillChar(temp, sizeof(temp), chr(32));
 
 (*  Line count - Calculating percentage. *)    
 
@@ -1081,9 +1079,8 @@ begin
 
     if Types = Position then
     begin
-
 (*  Column count. *)  
-        fillchar(line, sizeof(line), chr(32));
+        FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, currentline);
 
         j := length(line) + 1;
@@ -1138,11 +1135,11 @@ begin
         NoPrint     := [0..31, 127, 255];
         Print       := AllChars - NoPrint;
 
-        fillchar(temp2, sizeof(temp2), chr(32));
+        FillChar(temp2, sizeof(temp2), chr(32));
 
         for i := 1 to highestline do
         begin
-            fillchar(temp2, sizeof(temp2), chr(32));
+            FillChar(temp2, sizeof(temp2), chr(32));
             FromVRAMToRAM(temp2, i);
             for j   := 1 to length(temp2) do
                 if (temp2[j] = chr(32)) and (ord(temp2[j + 1]) in Print) and (j > 1) then
@@ -1184,7 +1181,7 @@ begin
     if destline >= highestline then
         destline := highestline;
     
-    fillchar(line, sizeof(line), chr(32));
+    FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, destline);    
     i := length(line);
     
@@ -1269,47 +1266,47 @@ var
     
 begin
     case keynum of
-        BS          :   backspace;
-        TAB         :   tabulate;
-        ENTER       :   Return;
-        UpArrow     :   CursorUp;
-        LeftArrow   :   CursorLeft;
-        RightArrow  :   CursorRight;
-        DownArrow   :   CursorDown;
-        INSERT      :   ins;
-        DELETE      :   del;
-        HOME        :   BeginFile;
-        CLS         :   EndFile;
-        CONTROLA    :   BeginLine;
-        CONTROLB    :   PreviousWord;
-        CONTROLC    :   Location(Position); 
-        CONTROLD    :   del;
-        CONTROLE    :   EndLine;    
-        CONTROLF    :   NextWord;
-        CONTROLG    :   Help;
-        CONTROLJ    :   AlignText;
-        CONTROLN    :   SearchAndReplace;
-        CONTROLO    :   WriteOut(true);
-        CONTROLS    :   WriteOut(false);
-        CONTROLP    :   ReadFile(true);
-        CONTROLQ    :   WhereIs (backwardsearch, false);
-        CONTROLT    :   GoToLine;
+        BS:         backspace;
+        TAB:        tabulate;
+        ENTER:      Return;
+        UpArrow:    CursorUp;
+        LeftArrow:  CursorLeft;
+        RightArrow: CursorRight;
+        DownArrow:  CursorDown;
+        INSERT:     ins;
+        DELETE:     del;
+        HOME:       BeginFile;
+        CLS:        EndFile;
+        CONTROLA:   BeginLine;
+        CONTROLB:   PreviousWord;
+        CONTROLC:   Location(Position); 
+        CONTROLD:   del;
+        CONTROLE:   EndLine;    
+        CONTROLF:   NextWord;
+        CONTROLG:   Help;
+        CONTROLJ:   AlignText;
+        CONTROLN:   SearchAndReplace;
+        CONTROLO:   WriteOut(true);
+        CONTROLS:   WriteOut(false);
+        CONTROLP:   ReadFile(true);
+        CONTROLQ:   WhereIs (backwardsearch, false);
+        CONTROLT:   GoToLine;
 (*        CONTROLU    : Colar conteúdo do buffer. Vai demorar... *)
-        CONTROLV    :   PageDown;
-        CONTROLW    :   WhereIs (forwardsearch,  false);
-        CONTROLY    :   PageUp;
-        CONTROLZ    :   ExitToDOS;
-        SELECT      :   begin
-                            key := ord(readkey);
-                            case key of
-                                DELETE  : RemoveLine;
-                                TAB     : backtab;
-                                68, 100 : Location  (HowMany);              (* D *)
-                                81, 113 : WhereIs   (backwardsearch, true); (* Q *)
-                                87, 119 : WhereIs   (forwardsearch , true); (* W *)
-                                else    delay(10);
-                            end;
+        CONTROLV:   PageDown;
+        CONTROLW:   WhereIs (forwardsearch,  false);
+        CONTROLY:   PageUp;
+        CONTROLZ:   ExitToDOS;
+        SELECT:     begin
+                        key := ord(readkey);
+                        case key of
+                            DELETE:     RemoveLine;
+                            TAB:        backtab;
+                            68, 100:    Location  (HowMany);              (* D *)
+                            81, 113:    WhereIs   (backwardsearch, true); (* Q *)
+                            87, 119:    WhereIs   (forwardsearch , true); (* W *)
+                            else    delay(10);
                         end;
+                    end;
         else    delay(10);
     end;
 end;
@@ -1391,11 +1388,11 @@ begin
             end;
         end;
     end;
+    
+    InitMainScreen;
 
     for i := 1 to maxwidth do
         tabset[i] := (i mod tabnumber) = 1;
-
-    InitMainScreen;
 
 (* main loop - get a key and process it *)
     repeat
