@@ -10,8 +10,8 @@ program milli;
 {$i d:conio.inc}
 {$i d:dos.inc}
 {$i d:dos2err.inc}
-{$i d:fillvram.inc}
 {$i d:readvram.inc}
+{$i d:fillvram.inc}
 {$i d:fastwrit.inc}
 {$i d:milli.inc}
 {$i d:txtwin.inc}
@@ -21,12 +21,15 @@ var
     currentline, key, highestline, 
     screenline, column:             byte;
     line, emptyline:                linestring;
+{
     linebuffer:                     array [1.. maxlines] of lineptr;
+}
     tabset:                         array [1..maxwidth] of boolean;
     textfile:                       text;
     searchstring, replacestring:    str80;
     filename:                       linestring;
-    savedfile, insertmode,iscommand:boolean;
+    savedfile, insertmode,
+    iscommand:                      boolean;
     tempnumber0:                    string[6];
     temp:                           linestring;
     i, j, tabnumber, newline,
@@ -159,15 +162,11 @@ end;
 
 procedure ReadFile (AskForName: boolean);
 var
-    EndOfRead,
     maxlinesnotreached: boolean;
     VRAMAddress:        integer;
-    counter:            real;
 
 begin
-    EndOfRead           := false;
     maxlinesnotreached  := false;
-    counter             := startvram;
 
     if AskForName then
     begin
@@ -188,16 +187,13 @@ begin
         StatusLine('New file')
     else
     begin
-
         currentline := 1;
 
-        while not EndOfRead do
+        while not eof(textfile) do
         begin
-            EndOfRead := eof(textfile);
             FillChar(line, sizeof(line), chr(32));
             readln(textfile, line);
-            counter := counter + length(line) + 1;
-            FromFileToVRAM(line, currentline, counter, EndOfRead);
+            FromRAMToVRAM(line, currentline);
             currentline := currentline + 1;
         end;
         
@@ -224,6 +220,9 @@ begin
 end;
 
 procedure InitTextEditor;
+var
+    counter:    real;
+
 begin
     GetScreenStatus(ScreenStatus);
     
@@ -236,18 +235,23 @@ begin
     SetBlinkRate(5, 0);
 
 (*  Some variables. *)   
-    currentline     := 1;   column  := 1;           screenline  := 1;
-    highestline     := 1;   searchstring    := '';  replacestring := '';
-    insertmode  := false;   savedfile       := false;
+    currentline := 1;   screenline      := 1;   highestline     := 1;
+    column      := 1;   searchstring    := '';  replacestring   := '';     
+    counter     := startvram;
+    insertmode  := false;   savedfile   := false;   
+    FillChar(filename,  sizeof(filename),   chr(32));
     FillChar(temp,      sizeof(temp),       chr(32));
     FillChar(emptyline, sizeof(emptyline),  chr(32));
-    
-(*  Erasing VRAM. *)
-    fillvram(0, startvram   , 0, $DFFF);
-    fillvram(1, 0           , 0, $FFFF);
 
-(*  Erasing structure. *)    
-    FillChar(structure, sizeof(structure) , 0);
+(*  Initialize structure. *)
+    for i := 1 to maxlines do
+    begin
+        InitVRAM(i, counter); 
+        counter := counter + maxcols;
+    end;
+
+(*  Erase 1st bank of VRAM. *)
+    fillvram(0, startvram   , 0, $FFFF - startvram);
 
 (*  Set new function keys. *)
     SetFnKey(1, chr(7));    SetFnKey(2, chr(26));   SetFnKey(3, chr(15));
@@ -268,7 +272,7 @@ begin
 
     Blink(2, 1, maxwidth);
     DrawScreen(1);
-    
+
     i := (maxwidth - length(filename)) div 2;
     FillChar(temp, sizeof(temp), chr(32));
     GotoXY(i - 3, 1);
@@ -575,7 +579,7 @@ begin
         GotoXY(1, maxlength + 1);
         ClrEol;
         Blink(1, maxlength + 1, maxwidth + 2);
-        if filename <> '' then
+        if ord(filename[1]) <> 32 then
             temp := concat('File Name to Write [', filename, ']: ')
         else
             temp := concat('File Name to Write: ');
@@ -614,8 +618,17 @@ end;
 
 procedure ExitToDOS;
 begin
-    if not savedfile then
-        WriteOut(false); 
+    GotoXY(1, maxlength + 1);
+    ClrEol;
+    Blink(1, maxlength + 1, maxwidth + 2);
+    temp := 'Save file? (Y/N)';
+    FastWrite(temp);
+    c := readkey;
+    
+    ClearStatusLine;
+    
+    if upcase(c) = 'Y' then
+        WriteOut(true);
 
     EraseWindow(EditWindowPtr);
 
@@ -1386,7 +1399,7 @@ begin
                 else
                     screenline := newline;
             end;
-        end;
+        end
     end;
     
     InitMainScreen;

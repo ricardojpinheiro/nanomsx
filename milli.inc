@@ -45,25 +45,23 @@ const
     Space       = 32;
     DELETE      = 127;
 
-    startvram   = 8192;
-    limitvram   = 65024;
+    startvram   = 5120;
+    limitvram   = 65280;
 
-    maxlines    = 230;
+    maxlines    = 1000;
     maxwidth    = 78;
     maxlength   = 21;
     maxcols     = 128;
 
 
 type
-    RStructure          =   record
-            VRAMBank:       byte;
-            VRAMposition:   integer;
-            size:           integer;
+    RStructure          = record
+        VRAMBank:           byte;
+        VRAMposition:       integer;
     end;
     
     str80               =   string [80];
     linestring          =   string [128];
-    lineptr             =   ^linestring;
     KeystrokeLines      =   (main, search, replace, align);
     Directions          =   (forwardsearch, backwardsearch);
     LocationOptions     =   (Position, HowMany);
@@ -215,36 +213,31 @@ end;
 procedure FromRAMToVRAM(var tempstr: linestring; linenumber: integer);
 begin
     with structure[linenumber] do
-        WriteVRAM(VRAMBank, VRAMposition, addr(tempstr), size);
+        WriteVRAM(VRAMBank, VRAMposition, addr(tempstr), maxcols);
 end;
 
 procedure FromVRAMToRAM(var tempstr: linestring; linenumber: integer);
 begin
     with structure[linenumber] do
-        ReadVRAM(VRAMBank, VRAMposition, addr(tempstr), size);
+        ReadVRAM(VRAMBank, VRAMposition, addr(tempstr), maxcols);
 end;
 
-procedure FromFileToVRAM(tempstr: linestring; linenumber: integer; 
-                            var counter: real; var EndOfRead: boolean);
+procedure InitVRAM(linenumber: integer; var counter: real);
 var
     VRAMAddress:    integer;
-
 begin
     with structure[linenumber] do
     begin
         if linenumber = 1 then
         begin
-            VRAMposition := startvram;
-            VRAMBank := 0;
+            VRAMposition    := startvram;
+            VRAMBank        := 0;
         end
         else
         begin
-            VRAMposition := structure[linenumber - 1].VRAMposition +
-                            structure[linenumber - 1].size;
-            VRAMBank :=     structure[linenumber - 1].VRAMBank;
+            VRAMposition    :=  structure[linenumber - 1].VRAMposition + maxcols;
+            VRAMBank        :=  structure[linenumber - 1].VRAMBank;
         end;
-
-        size         :=     maxcols;
 
         if counter >= limitvram then
         begin
@@ -252,11 +245,6 @@ begin
             VRAMposition    := $0000;
             counter         := 0;
         end;
-
-        if VRAMBank < 2 then
-            WriteVRAM(VRAMBank, VRAMposition, addr(tempstr), size)
-        else
-            EndOfRead := true;    
     end;
 end;
 
