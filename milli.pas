@@ -212,11 +212,13 @@ begin
 
     close(textfile);
 
-    highestline := currentline - 1;
+    highestline := currentline;
     currentline := 1;
     column      := 1;
     screenline  := 1;
     insertmode  := true;
+    if AskForName then
+        DrawScreen(1);
 end;
 
 procedure InitTextEditor;
@@ -360,10 +362,10 @@ end;
 
 procedure EndFile;
 begin
-    currentline := highestline + 1;
-    screenline  := 12;
+    currentline := highestline - maxlength + 1;
+    screenline  := 1;
     column      := 1;
-    DrawScreen(2);
+    DrawScreen(1);
 end;
 
 procedure BeginLine;
@@ -962,26 +964,26 @@ var
 
 begin
 (*  Testar um pouco mais. *)
-    FillChar(temp, sizeof(temp), chr(32));
-    FromVRAMToRAM(temp, currentline);
+    FillChar(line, sizeof(line), chr(32));
+    FromVRAMToRAM(line, currentline);
         
-    lengthline := length(temp);
+    lengthline := length(line);
     
 (*  Remove blank spaces in the beginning and in the end of the line. *)
-    i := DifferentPos   (chr(32), temp) - 1; 
-    j := RDifferentPos  (chr(32), temp) + 1;
+    i := DifferentPos   (chr(32), line) - 1; 
+    j := RDifferentPos  (chr(32), line) + 1;
 
     if i > 1 then
-        delete(temp, 1, i)
+        delete(line, 1, i)
     else
         i := 0;
         
     if j < maxwidth then
-        delete(temp, j, lengthline - j)
+        delete(line, j, lengthline - j)
     else
         j := maxwidth;
 
-    lengthline := length(temp);
+    lengthline := length(line);
 
     DisplayKeys(align);
     c := readkey;
@@ -991,27 +993,30 @@ begin
 (* left - L *)
                         blankspaces := (maxwidth - lengthline) + 1;
                         for i := 1 to blankspaces do
-                            insert(#32, temp, lengthline + 1);
+                            insert(#32, line, lengthline + 1);
+                        temp := 'Text aligned to the left.';
                     end;
         82, 114:    begin
 (* right - R *)        
                         blankspaces := (maxwidth - lengthline);
                         for i := 1 to blankspaces do
-                            insert(#32, temp, 1);
+                            insert(#32, line, 1);
+                        temp := 'Text aligned to the right.';
                     end;
         67, 99:     begin
 (* center - C *)
                         blankspaces := (maxwidth - lengthline) div 2;
                         for i := 1 to blankspaces do
-                            insert(#32, temp, 1);                        
+                            insert(#32, line, 1);
+                        temp := 'Text centered.';
                     end;
         74, 106:    begin
 (* justify - J *)
                         j := 1;
                         
 (*  Find all blank spaces in the phrase and save their positions. *)
-                        for i := 1 to (RDifferentPos(chr(32), temp)) do
-                            if ord(temp[i]) = 32 then
+                        for i := 1 to (RDifferentPos(chr(32), line)) do
+                            if ord(line[i]) = 32 then
                             begin
                                 justifyvector[j] := i;
                                 j := j + 1;
@@ -1024,44 +1029,33 @@ begin
                         for i := j downto 1 do
                         begin
                             for l := 1 to k do
-                                insert(#32, temp, justifyvector[i]);
+                                insert(#32, line, justifyvector[i]);
                             justifyvector[i] := justifyvector[i] + k;
                         end;
 
                         k := (maxwidth - lengthline) mod j;
                         
                         for l := 1 to k do
-                            insert(#32, temp, justifyvector[1]);
+                            insert(#32, line, justifyvector[1]);
                         justifyvector[1] := justifyvector[1] + k;
-
+                        temp := 'Text justified.';
                     end;
     end;
-    FromVRAMToRAM(temp, currentline);
     DisplayKeys(main);
-
-(*  Fica mais rápido redesenhar somente a linha alterada. *)
-
-    if screenline < (maxlength - 1) then
-    begin
-        FillChar(line, sizeof(line), chr(32));
-        FromVRAMToRAM(line, currentline);
-        quick_display(1, screenline, line);
-        
-        FillChar(line, sizeof(line), chr(32));
-        FromVRAMToRAM(line, currentline + 1);
-        quick_display(1, screenline + 1, line);
-    end
-    else
-        DrawScreen(1);
-    
-    case ord(c) of
-        76, 108: temp := 'Text aligned to the left.';   (* L *)
-        82, 114: temp := 'Text aligned to the right.';  (* R *)
-        67, 99:  temp := 'Text aligned to the center.'; (* C *)
-        74, 106: temp := 'Text justified.';             (* K *)
-    end;
-    
     StatusLine(temp);
+
+    FromRAMToVRAM(line, currentline);
+    quick_display(1, currentline, line);
+
+    j := 1;
+    if upcase(c) = 'J' then
+        for i := (currentline + 1) to (maxlength - 1) do
+        begin
+            FillChar(line, sizeof(line), chr(32));
+            FromVRAMToRAM(line, i);
+            quick_display(1, screenline + j, line);
+            j := j + 1;
+        end;
 end;
 
 procedure Location (Types: LocationOptions);

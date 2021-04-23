@@ -53,7 +53,6 @@ const
     maxlength   = 21;
     maxcols     = 128;
 
-
 type
     RStructure          = record
         VRAMBank:           byte;
