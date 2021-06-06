@@ -1,8 +1,7 @@
 (* milli
  * This wannabe GNU nano-like text editor is based on Qed-Pascal
- * (http://texteditors.org/cgi-bin/wiki.pl?action=browse&diff=1&id=Qed-Pascal).
- * Our main approach is to have all GNU nano funcionalities. 
- * MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.
+ * (http://bit.ly/qedpascal). Our main approach is to have all GNU nano
+ * funcionalities. MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.
  *)
 
 program milli;
@@ -13,13 +12,13 @@ program milli;
 {$i d:readvram.inc}
 {$i d:fillvram.inc}
 {$i d:fastwrit.inc}
-{$i d:milli.inc}
 {$i d:txtwin.inc}
 {$i d:blink.inc}
+{$i d:milli.inc}
 
 var
-    currentline, key, highestline, 
-    screenline, column:             byte;
+    currentline, highestline:       integer; 
+    key, screenline, column:        byte;
     line, emptyline:                linestring;
 {
     linebuffer:                     array [1.. maxlines] of lineptr;
@@ -31,7 +30,6 @@ var
     savedfile, insertmode,
     iscommand:                      boolean;
     tempnumber0:                    string[6];
-    temp:                           linestring;
     i, j, tabnumber, newline,
     newcolumn, returncode:          integer;
     c:                              char;
@@ -39,7 +37,7 @@ var
     Registers:                      TRegs;
     ScreenStatus:                   TScreenStatus;
    
-    EditWindowPtr,StatusWindowPtr:  Pointer;
+    EditWindowPtr:                  Pointer;
     MSXDOSversion:                  TMSXDOSVersion;
 
 Procedure CursorOn;
@@ -52,10 +50,11 @@ Begin
     ClearBlinkChar(column + 1, screenline + 1);
 End;
 
-(* Return true if a key waiting, and the key. *)
 procedure GetKey (var key: byte; var iscommand: boolean);
 var
     inkey: char;
+
+(* Return true if a key waiting, and the key. *)
     
 begin
     iscommand   := false;
@@ -71,15 +70,6 @@ begin
     GotoWindowXY(EditWindowPtr, x, y);
     WriteWindow (EditWindowPtr, s);
     ClrEolWindow(EditWindowPtr);
-end;
-
-procedure ClearStatusLine;
-begin
-    ClearBlink(1, maxlength + 1, maxwidth + 2);
-    FillChar(temp, maxwidth + 3, #23);
-    temp[1]             := #26;
-    temp[maxwidth + 2]  := #27;
-    WriteVRAM(0, (maxwidth + 2) * maxlength, Addr(temp[1]), maxwidth + 3);
 end;
 
 procedure StatusLine (message: str80);
@@ -160,6 +150,17 @@ begin
     end;
 end;
 
+procedure DisplayFileNameOnTop;
+begin
+    i := (maxwidth - length(filename)) div 2;
+    FillChar(temp, sizeof(temp), chr(32));
+    GotoXY(i - 3, 1);
+    FastWriteln(temp);
+
+    GotoXY(i, 1);
+    FastWriteln(filename);
+end;
+
 procedure ReadFile (AskForName: boolean);
 var
     maxlinesnotreached: boolean;
@@ -212,11 +213,11 @@ begin
 
     close(textfile);
 
-    highestline := currentline;
-    currentline := 1;
-    column      := 1;
-    screenline  := 1;
-    insertmode  := true;
+    highestline := currentline; currentline := 1; column := 1;
+    screenline  := 1;           insertmode  := true;
+
+    DisplayFileNameOnTop;
+
     if AskForName then
         DrawScreen(1);
 end;
@@ -237,80 +238,51 @@ begin
     SetBlinkRate(5, 0);
 
 (*  Some variables. *)   
-    currentline := 1;   screenline      := 1;   highestline     := 1;
-    column      := 1;   searchstring    := '';  replacestring   := '';     
-    counter     := startvram;
-    insertmode  := false;   savedfile   := false;   
-    FillChar(filename,  sizeof(filename),   chr(32));
-    FillChar(temp,      sizeof(temp),       chr(32));
-    FillChar(emptyline, sizeof(emptyline),  chr(32));
+    currentline := 1; screenline := 1;         highestline := 1;
+    column      := 1; counter    := startvram; insertmode  := false;
+    savedfile   := false;   
+    FillChar(filename,      sizeof(filename),       chr(32));
+    FillChar(temp,          sizeof(temp),           chr(32));
+    FillChar(emptyline,     sizeof(emptyline),      chr(32));
+    FillChar(filename,      sizeof(filename),       chr(32));
+    FillChar(searchstring,  sizeof(searchstring),   chr(32));
+    FillChar(replacestring, sizeof(replacestring),  chr(32));
 
 (*  Initialize structure. *)
+
+    GotoXY(1, 1); FastWriteln('Initializing structures...');
     for i := 1 to maxlines do
     begin
         InitVRAM(i, counter); 
         counter := counter + maxcols;
     end;
 
-(*  Erase 1st bank of VRAM. *)
+(*  Erase VRAM banks, from startvram till the end. *)
+    GotoXY(1, 2); FastWriteln('Wiping memory, please be patient...');
     fillvram(0, startvram   , 0, $FFFF - startvram);
+    fillvram(1, 0           , 0, $FFFF);
 
 (*  Set new function keys. *)
-    SetFnKey(1, chr(7));    SetFnKey(2, chr(26));   SetFnKey(3, chr(15));
-    SetFnKey(4, chr(10));   SetFnKey(5, chr(3));    SetFnKey(6, chr(23));
-    SetFnKey(7, chr(20));   SetFnKey(8, chr(17));
-
+    SetFnKey(1, chr(7));  SetFnKey(2, chr(26)); SetFnKey(3, chr(15));
+    SetFnKey(4, chr(10)); SetFnKey(5, chr(3));  SetFnKey(6, chr(23));
+    SetFnKey(7, chr(20)); SetFnKey(8, chr(17));
 end;
 
 procedure InitMainScreen;
-var
-    i: byte;
-    
 begin
-    EditWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, chr(32));
+    EditWindowPtr := MakeWindow(0,  1,  maxwidth  + 2, 
+                                        maxlength + 1, chr(32));
 
     GotoXY(3, 1);
-    FastWrite('milli 0.2');
+    FastWrite('milli 0.1');
 
     Blink(2, 1, maxwidth);
     DrawScreen(1);
 
-    i := (maxwidth - length(filename)) div 2;
-    FillChar(temp, sizeof(temp), chr(32));
-    GotoXY(i - 3, 1);
-    FastWriteln(temp);
-
-    GotoXY(i, 1);
-    FastWriteln(filename);
+    DisplayFileNameOnTop;
 
     DisplayKeys (main);
     ClearStatusLine;
-end;
-
-procedure Help;
-begin
-    ClearStatusLine;
-    ClearBlink(1, maxlength + 1, maxwidth + 2);
-    StatusWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, 'Main milli help text');
-    WritelnWindow(StatusWindowPtr, 'Commands:');
-    WritelnWindow(StatusWindowPtr, 'Ctrl-S - Save current file         | Ctrl-O - Save as file (F3)');
-    WritelnWindow(StatusWindowPtr, 'Ctrl-P - Read new file             | Ctrl+Z - Close and exit from nano (F2)');
-    WritelnWindow(StatusWindowPtr, 'Ctrl+G - Display help text (F1)    | Ctrl+C - Report cursor position (F5)');
-    WritelnWindow(StatusWindowPtr, 'Ctrl+A - To start of line          | Ctrl+Y - One page up');
-    WritelnWindow(StatusWindowPtr, 'Ctrl+E - To end of line            | Ctrl+V - One page down');
-    WritelnWindow(StatusWindowPtr, 'Ctrl+F - One word backward         | Ctrl+D - One word forward');
-    WritelnWindow(StatusWindowPtr, 'TAB - Indent marked region         | SELECT+TAB - Unindent marked region');
-    WritelnWindow(StatusWindowPtr, 'Cursor right - Character forward   | Cursor up   - One line up');
-    WritelnWindow(StatusWindowPtr, 'Cursor left  - Character backward  | Cursor down - One line down');
-    WritelnWindow(StatusWindowPtr, 'HOME - To start of file            | CLS - To end of file');
-    WritelnWindow(StatusWindowPtr, 'Ctrl+J - Align line (F4)           | Ctrl+W - Start forward search (F6)');
-    WritelnWindow(StatusWindowPtr, 'Ctrl+N - Start a replacing session | Ctrl+Q - Start backward search (F8)');
-    WritelnWindow(StatusWindowPtr, 'BS - Delete character before cursor| SELECT+W - Next occurrence forward');
-    WritelnWindow(StatusWindowPtr, 'DEL - Delete character under cursor| SELECT+Q - Next occurrence backward');
-    WritelnWindow(StatusWindowPtr, 'SELECT-DEL - Delete current line   | Ctrl+T - Go to specified line (F7)');
-    WritelnWindow(StatusWindowPtr, 'SELECT-D - Report line/word/char count');
-    c := readkey;
-    EraseWindow(StatusWindowPtr);
 end;
 
 procedure character(inkey: char);
@@ -373,7 +345,9 @@ begin
     currentline := WhereYWindow(EditWindowPtr);
     screenline  := currentline;
     column      := 1;
+(*
     DrawScreen(1);
+*)
 end;
 
 procedure EndLine;
@@ -424,12 +398,6 @@ end;
 
 procedure InsertLine;
 begin
-
-(* Problema: Aqui vamos ter que mexer depois. Será necessário criar 
-*  uma rotina para mover os dados na VRAM, para inserir a linha.
-*  Também será necessário uma rotina para remover linhas, fazendo a 
-*  desfragmentação da VRAM. *)
-    
     FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
 
@@ -440,7 +408,10 @@ begin
         linebuffer[i + 1] := linebuffer[i];
 }
     line        := emptyline;
+{
     highestline := highestline + 1;
+}
+    InsertLinesIntoText (currentline, highestline, 1);
     FromRAMToVRAM(line, currentline);
 end;
 
@@ -456,12 +427,6 @@ end;
 
 procedure deleteline;
 begin
-
-(* Problema: Aqui vamos ter que mexer depois. Será necessário criar 
-*  uma rotina para mover os dados na VRAM, para inserir a linha.
-*  Também será necessário uma rotina para remover linhas, fazendo a 
-*  desfragmentação da VRAM. *)
-
     DelLineWindow(EditWindowPtr);
 
     FillChar(line, sizeof(line), chr(32));
@@ -469,6 +434,8 @@ begin
 
     if highestline > currentline + (maxlength - screenline) then
         quick_display(1, maxlength,line);
+
+    DeleteLinesFromText(currentline, highestline, 1);
 
     FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
@@ -585,9 +552,9 @@ begin
             temp := concat('File Name to Write [', filename, ']: ')
         else
             temp := concat('File Name to Write: ');
-{    
+    
         tempfilename := filename;
-}
+
         FastWrite(temp);
         read(filename);
     end;
@@ -601,9 +568,6 @@ begin
     
     for i := 1 to highestline do
     begin
-        if (i mod 100) = 0 then
-            write(#13, i);
-
         FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, i);
         writeln(textfile, line);
@@ -766,7 +730,8 @@ var
 begin
     DisplayKeys (search);
 
-(*  Problema: Não está funcionando continuar a busca de trás pra frente. Verificar. *)
+(*  Problema: Não está funcionando continuar a busca de trás pra frente.
+*   Verificar. *)
     
     if NOT nextoccurrence OR (searchstring = '') then
     begin
@@ -855,7 +820,7 @@ begin
 
     tempsearchstring := searchstring;
     if searchstring <> '' then
-        temp := concat('Search (to replace) [', tempsearchstring, ']: ')
+        temp := concat('Search (to replace) [',tempsearchstring, ']: ')
     else
         temp := 'Search (to replace): ';
         
@@ -927,10 +892,11 @@ begin
                                 
 (* a, A, y, Y *)
                                 
-(* Problema: A rotina que faz a troca precisa fazer nova busca a partir daquela posição
-* nova. Este é um problema que vem desde o código original. Outra alteração seria 
-* apenas reescrever aquela linha específica, e não toda a janela. Redesenhar toda a 
-* janela, somente se trocar de página. *)
+(*  Problema: A rotina que faz a troca precisa fazer nova busca a partir
+*   daquela posição nova. Este é um problema que vem desde o código
+*   original. Outra alteração seria apenas reescrever aquela linha
+*   específica, e não toda a janela. Redesenhar toda a janela, somente
+*   se trocar de página. *)
                                 
             65, 97, 89, 121:    begin
                                     line := copy (line, 1, position - 1) +
@@ -1206,65 +1172,30 @@ begin
     ClearStatusLine;
 end;
 
-procedure CommandLineBanner;
+procedure Help;
 begin
-    FastWriteln('              ##     mmmm      mmmm         ##    ');
-    FastWriteln('              ""     ""##      ""##         ""    ');
-    FastWriteln(' ####m##m   ####       ##        ##       ####    ');
-    FastWriteln(' ## ## ##     ##       ##        ##         ##    ');
-    FastWriteln(' ## ## ##     ##       ##        ##         ##    ');
-    FastWriteln(' ## ## ##  mmm##mmm    ##mmm     ##mmm   mmm##mmm ');
-    FastWriteln(' "" "" ""  """"""""     """"      """"   """""""" ');
+    ClrWindow(EditWindowPtr);
+    WritelnWindow(EditWindowPtr, 'Commands:');
+    WritelnWindow(EditWindowPtr, 'Ctrl-S - Save current file         | Ctrl-O - Save as file (F3)');
+    WritelnWindow(EditWindowPtr, 'Ctrl-P - Read new file             | Ctrl+Z - Close and exit from nano (F2)');
+    WritelnWindow(EditWindowPtr, 'Ctrl+G - Display help text (F1)    | Ctrl+C - Report cursor position (F5)');
+    WritelnWindow(EditWindowPtr, 'Ctrl+A - To start of line          | Ctrl+Y - One page up');
+    WritelnWindow(EditWindowPtr, 'Ctrl+E - To end of line            | Ctrl+V - One page down');
+    WritelnWindow(EditWindowPtr, 'Ctrl+F - One word forward          | Ctrl+B - One word backward');
+    WritelnWindow(EditWindowPtr, 'TAB - Indent marked region         | SELECT+TAB - Unindent marked region');
+    WritelnWindow(EditWindowPtr, 'Cursor right - Character forward   | Cursor up   - One line up');
+    WritelnWindow(EditWindowPtr, 'Cursor left  - Character backward  | Cursor down - One line down');
+    WritelnWindow(EditWindowPtr, 'HOME - To start of file            | CLS - To end of file');
+    WritelnWindow(EditWindowPtr, 'Ctrl+J - Align line (F4)           | Ctrl+W - Start forward search (F6)');
+    WritelnWindow(EditWindowPtr, 'Ctrl+N - Start a replacing session | Ctrl+Q - Start backward search (F8)');
+    WritelnWindow(EditWindowPtr, 'BS - Delete character before cursor| SELECT+W - Next occurrence forward');
+    WritelnWindow(EditWindowPtr, 'DEL - Delete character under cursor| SELECT+Q - Next occurrence backward');
+    WritelnWindow(EditWindowPtr, 'SELECT-DEL - Delete current line   | Ctrl+T - Go to specified line (F7)');
+    WritelnWindow(EditWindowPtr, 'SELECT-D - Report line/word/char count');
+    repeat until keypressed;
+    DrawScreen(1);
 end;
 
-(*  Command version.*)
-
-procedure CommandLineVersion;
-begin
-    clrscr;
-    CommandLineBanner;
-    FastWriteln('Version 0.2 - Copyright (c) 2020, 2021 Brazilian MSX Crew.');
-    FastWriteln('Some rights reserved.');
-    writeln;
-    FastWriteln('This editor resembles the GNU nano editor <https://www.nano-editor.org>,');
-    FastWriteln('using the same look-and-feel and a lot of keystrokes from GNU nano editor.');
-    writeln;
-    FastWriteln('License GPLv3+: GNU GPL v. 3 or later <https://gnu.org/licenses/gpl.html>');
-    FastWriteln('This is free software: you are free to change and redistribute it.');
-    FastWriteln('There is NO WARRANTY to the extent permitted by law.');
-    writeln;
-    FastWriteln('By the way, the name, ''milli'', may come from two places:');
-    FastWriteln('1 - A unit prefix in the metric system denoting a factor of one thousandth.');
-    FastWriteln('2 - The restaurant at the end of the Universe, called Milliways, from');
-    FastWriteln('the Hitchhiker''s Guide to the Galaxy series, written by Douglas Adams.');
-    FastWriteln('Personally, I would prefer the last one. ');
-    ClearAllBlinks;
-    halt;
-end;
-
-procedure CommandLineHelp;
-begin
-    clrscr;
-    CommandLineBanner;
-    FastWriteln('Usage: milli <file> <parameters>');
-    FastWriteln('Text editor.');
-    writeln;
-    FastWriteln('File: Text file which will be edited.');
-    writeln;
-    FastWriteln('Parameters: ');
-{    
-    FastWriteln('/b             - Save backups of existing files.');
-    FastWriteln('/e             - Convert typed tabs to spaces.');
-}
-    FastWriteln('/l<l>          - Start at line l.');
-    FastWriteln('/c<c>          - Start at column c.');
-    FastWriteln('/t<n>          - Make a tab this number (n) of columns wide.');
-    FastWriteln('/h             - Show this help text and exit.');
-    FastWriteln('/v             - Output version information and exit.');
-    writeln;
-    ClearAllBlinks;
-    halt;
-end;
 
 procedure handlefunc(keynum: byte);
 var
@@ -1294,8 +1225,8 @@ begin
         CONTROLJ:   AlignText;
         CONTROLN:   SearchAndReplace;
         CONTROLO:   WriteOut(true);
-        CONTROLS:   WriteOut(false);
         CONTROLP:   ReadFile(true);
+        CONTROLS:   WriteOut(false);
         CONTROLQ:   WhereIs (backwardsearch, false);
         CONTROLT:   GoToLine;
 (*        CONTROLU    : Colar conteúdo do buffer. Vai demorar... *)
