@@ -53,7 +53,6 @@ End;
 procedure GetKey (var key: byte; var iscommand: boolean);
 var
     inkey: char;
-
 (* Return true if a key waiting, and the key. *)
     
 begin
@@ -139,6 +138,8 @@ begin
 end;
 
 procedure DrawScreen (j: byte);
+var
+    line:   linestring;
 begin
     ClrWindow(EditWindowPtr);
 
@@ -198,8 +199,8 @@ begin
             currentline := currentline + 1;
         end;
         
-(*  Problema: Se o arquivo for grande demais pro editor, ler 
-*   somente a parte que dá pra ler e parar.*)
+(*  Problema, gravidade alta: Se o arquivo for grande demais pro
+*   editor, ele tem que ler somente a parte que dá pra ler e parar.*)
         
         str(currentline - 1, tempnumber0);
 
@@ -334,6 +335,9 @@ end;
 
 procedure EndFile;
 begin
+(*  Problema, gravidade baixa: Se eu coloco um valor maior do que 1 em
+*   screenline, ele coloca na tela anterior. Bem, a ser resolvido
+*   depois. *)
     currentline := highestline - maxlength + 1;
     screenline  := 1;
     column      := 1;
@@ -403,14 +407,10 @@ begin
 
     GotoWindowXY(EditWindowPtr, column, screenline + 1);
     InsLineWindow(EditWindowPtr);
-{
-    for i := highestline + 1 downto currentline do
-        linebuffer[i + 1] := linebuffer[i];
-}
+
     line        := emptyline;
-{
     highestline := highestline + 1;
-}
+
     InsertLinesIntoText (currentline, highestline, 1);
     FromRAMToVRAM(line, currentline);
 end;
@@ -730,17 +730,16 @@ var
 begin
     DisplayKeys (search);
 
-(*  Problema: Não está funcionando continuar a busca de trás pra frente.
-*   Verificar. *)
-    
     if NOT nextoccurrence OR (searchstring = '') then
     begin
         GotoXY(1, maxlength + 1);
         ClrEol;
         Blink(1, maxlength + 1, maxwidth + 2);
-        tempsearchstring := searchstring;
-        if searchstring <> '' then
-            temp := concat('Search [', tempsearchstring, ']: ')
+        if searchstring[1] <> ' ' then
+        begin
+            tempsearchstring := searchstring;
+            temp := concat('Search [', tempsearchstring, ']: ');
+        end
         else
             temp := 'Search: ';
         
@@ -758,11 +757,15 @@ begin
             searchstring := tempsearchstring;
         
     if direction = forwardsearch then
-        stopsearch := highestline
+    begin
+        stopsearch := highestline;
+        i := currentline + 1;
+    end
     else
+    begin
         stopsearch := 1;
-        
-    i := currentline + 1;
+        i := currentline - 1;
+    end;
     
     while i <> stopsearch do
     begin
@@ -807,7 +810,8 @@ end;
 procedure SearchAndReplace;
 var
     position, linesearch:               integer;
-    searchlength, replacementlength:    byte;
+    searchlength, replacementlength,
+    searchperline:                      byte;
     choice:                             char;
     tempsearchstring:                   str80;
    
@@ -819,7 +823,7 @@ begin
     Blink(1, maxlength + 1, maxwidth + 2);
 
     tempsearchstring := searchstring;
-    if searchstring <> '' then
+    if searchstring[1] <> ' ' then
         temp := concat('Search (to replace) [',tempsearchstring, ']: ')
     else
         temp := 'Search (to replace): ';
@@ -849,15 +853,16 @@ begin
     replacementlength := length (replacestring);
 
     choice := ' ';    
+    searchperline := 1;
 
     for linesearch := 1 to highestline do
     begin
         FillChar(line, sizeof(line), chr(32));
-        FromVRAMToRAM(line, linesearch);        
-        
+        FromVRAMToRAM(line, linesearch);
+    
         position := pos (searchstring, line);
 
-        while (position > 0) do
+        if (position > 0) then
         begin
             currentline := linesearch;
             if currentline >= 12 then
@@ -879,8 +884,6 @@ begin
 
             ClearBlink(column + 1, screenline + 1, searchlength);
 
-(* Problema: Na execução do replace, *)
-            
             case ord (choice) of
             CONTROLC:          begin
                                     ClrEol;
@@ -892,34 +895,32 @@ begin
                                 
 (* a, A, y, Y *)
                                 
-(*  Problema: A rotina que faz a troca precisa fazer nova busca a partir
-*   daquela posição nova. Este é um problema que vem desde o código
-*   original. Outra alteração seria apenas reescrever aquela linha
-*   específica, e não toda a janela. Redesenhar toda a janela, somente
-*   se trocar de página. *)
-                                
             65, 97, 89, 121:    begin
-                                    line := copy (line, 1, position - 1) +
-                                    replacestring + copy (line, 
-                                    position + length (searchstring), 128);
+                                    line := concat(copy (line, 1, 
+                                    position - 1), replacestring, 
+                                    copy (line, position + 
+                                    length (searchstring), maxcols));
 
-                                    position := pos (searchstring, copy (line,
-                                    position + replacementlength + 1, 128)) + 
+                                    position := pos (searchstring, 
+                                    copy (line, position + 
+                                    replacementlength + 1, maxcols)) + 
                                     position + replacementlength;
                                 end;
 (* n, N *)                                
-            78, 110:            position := pos (searchstring, copy (line,
-                                position + length(searchstring) + 1, 128)) +
+            78, 110:            position := pos (searchstring,
+                                copy (line, position + 
+                                length(searchstring) + 1, maxcols)) +
                                 position + length(searchstring);
             end;
-
+            FromRAMToVRAM(line, currentline);
             GotoWindowXY(EditWindowPtr, 1, screenline);
             ClrEolWindow(EditWindowPtr);
             temp := copy(line, 1, maxlength + 1);
             WriteWindow(EditWindowPtr, temp);
-            FromRAMToVRAM(line, linesearch);
         end;
     end;
+    DisplayKeys(main);
+    ClearStatusLine;
 end;
 
 procedure AlignText;
@@ -929,7 +930,6 @@ var
     justifyvector:  array [1..maxwidth] of byte;
 
 begin
-(*  Testar um pouco mais. *)
     FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
         
@@ -1011,10 +1011,17 @@ begin
     StatusLine(temp);
 
     FromRAMToVRAM(line, currentline);
+    DrawScreen(1);
+
+(*  Problema, gravidade baixa: O ideal é que ele só redesenhe a linha,
+*   e não a página toda. Mas no momento, não está funcionando.
+*   A ser resolvido depois. *)
+{
     quick_display(1, currentline, line);
 
     j := 1;
     if upcase(c) = 'J' then
+
         for i := (currentline + 1) to (maxlength - 1) do
         begin
             FillChar(line, sizeof(line), chr(32));
@@ -1022,6 +1029,7 @@ begin
             quick_display(1, screenline + j, line);
             j := j + 1;
         end;
+}
 end;
 
 procedure Location (Types: LocationOptions);
@@ -1290,7 +1298,7 @@ begin
                 begin
                     delete(temp, 1, 2);
 
-    (*  Parameters. *)
+(*  Parameters. *)
                     case c of
                         'H': CommandLineHelp;
                         'V': CommandLineVersion;
