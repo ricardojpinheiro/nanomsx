@@ -295,48 +295,47 @@ begin
     SearchForBlankBlock := i - BlankLines;
 end;   
 
-procedure InsertLinesIntoText(CurrentLineText: integer;
-                            var TotalLinesText: integer;
-                                BlankLinesText: integer); 
+procedure InsertLinesIntoText(CurrentLine   : integer;
+                            var TotalLines  : integer;
+                                BlankLines  : integer); 
 var
     i, NewBeginBlock: integer;
     
 begin
-(*  Move o bloco de texto, até o fim, BlankLinesText para baixo. *)
-
-    i := (TotalLinesText + 1) - CurrentLineText;
-    Move(textlines[CurrentLineText], textlines[CurrentLineText + BlankLinesText],
-        sizeof(textlines[BlankLinesText]) * i);
+(*  Move o bloco de texto, até o fim, BlankLines para baixo. *)
+    i := (TotalLines + 1) - CurrentLine;
+    Move(textlines[CurrentLine], textlines[CurrentLine + BlankLines],
+        sizeof(textlines[BlankLines]) * i);
 
 (*  Bloqueia as linhas novas, de forma que na busca por trechos em
 *   branco, elas não sejam consideradas. *)
 
-    for i := (TotalLinesText + 1) to (TotalLinesText + BlankLinesText) do 
+    for i := (TotalLines + 1) to (TotalLines + BlankLines) do 
         emptylines[i] := false;
 
 (*  Procura por blocos vazios do tamanho exato que precisamos, para 
 *   redirecionar o bloco de texto na VRAM. *)
 
-    NewBeginBlock := SearchForBlankBlock(BlankLinesText);
+    NewBeginBlock := SearchForBlankBlock(BlankLines);
 
-    for i := CurrentLineText to (CurrentLineText + BlankLinesText - 1) do 
+    for i := (CurrentLine + 1) to (CurrentLine + BlankLines) do 
     begin
 
 (*  Reposiciona, na tabela de alocações, o bloco de texto da VRAM. *)
 
         textlines[i].VRAMBank       := textlines[NewBeginBlock + 
-                                        (i - CurrentLineText) + 1].VRAMBank;
+                                    (i - CurrentLine) + 1].VRAMBank;
         textlines[i].VRAMPosition   := textlines[NewBeginBlock + 
-                                    (i - CurrentLineText) + 1].VRAMPosition;
+                                    (i - CurrentLine) + 1].VRAMPosition;
     end;
 
-(*  Novo máximo, acrescido de BlankLinesText. *)
+(*  Novo máximo, acrescido de BlankLines. *)
 
-    TotalLinesText := TotalLinesText + BlankLinesText - 1;
+    TotalLines := TotalLines + BlankLines;
 
 (*  Marca no vetor emptylines, que essas linhas estão bloqueadas. *)
     
-    for i := (CurrentLineText + 1) to TotalLinesText do
+    for i := (CurrentLine + 1) to TotalLines do
         emptylines[i] := false;
 end;
 

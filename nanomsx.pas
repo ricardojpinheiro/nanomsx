@@ -398,7 +398,7 @@ end;
 
 procedure CursorDown;
 begin
-    if currentline >= (highestline - 1) then
+    if currentline >= highestline then
         exit;
     
     currentline :=  currentline + 1;
@@ -418,7 +418,7 @@ begin
     GotoWindowXY(EditWindowPtr, column, screenline + 1);
     InsLineWindow(EditWindowPtr);
 
-    for i := highestline + 1 downto currentline do
+    for i := highestline downto currentline - 1 do
         linebuffer[i + 1] := linebuffer[i];
 
     linebuffer[currentline] := emptyline;

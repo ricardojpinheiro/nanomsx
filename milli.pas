@@ -289,19 +289,25 @@ end;
 procedure character(inkey: char);
 begin
     CursorOff;
+
+    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, ' highestl: ', highestline, ' Char');
+
+    FillChar(line, sizeof(line), chr(32));
+    FromVRAMToRAM(line, currentline);
+
     if column > maxwidth then
         delay(10)
     else
     begin
         GotoWindowXY(EditWindowPtr, column, screenline);
         WriteWindow(EditWindowPtr, inkey);
-        
-        FillChar(line, sizeof(line), chr(32));
-        FromVRAMToRAM(line, currentline);
-
+{
         if line = emptyline then
-            FromRAMToVRAM(line, currentline);
-
+        begin
+            InsertLinesIntoText (currentline - 1, highestline, 1);
+            FillChar(line, sizeof(line), chr(32));
+        end;
+}
         while length(line) <= column do
             line := line + ' ';
 
@@ -321,7 +327,7 @@ begin
         if column >= 78 then
             delay(10);
     end;
-    FromRAMToVRAM(line, currentline);
+    FromRAMToVRAM(line, currentline);    
     CursorOn;
 end;
 
@@ -373,17 +379,21 @@ begin
     begin
         GotoWindowXY(EditWindowPtr, 1, 1);
         ScrollWindowDown(EditWindowPtr);
+
         FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, currentline);
         quick_display(1, 1, line);
     end
     else
         screenline := screenline - 1;
+
+    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, ' highestl: ', highestline, ' CursU    ');
+
 end;
 
 procedure CursorDown;
 begin
-    if currentline >= (highestline - 1) then
+    if currentline >= highestline then
         exit;
     
     currentline :=  currentline + 1;
@@ -398,31 +408,28 @@ begin
         FromVRAMToRAM(line, currentline);
         quick_display(1, screenline, line);
     end;
+
+    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, ' highestl: ', highestline, ' CursD   ');
+
 end;
 
 procedure InsertLine;
 begin
-    FillChar(line, sizeof(line), chr(32));
-    FromVRAMToRAM(line, currentline);
-
     GotoWindowXY(EditWindowPtr, column, screenline + 1);
     InsLineWindow(EditWindowPtr);
-
-    line        := emptyline;
-    highestline := highestline + 1;
-
-    InsertLinesIntoText (currentline, highestline, 1);
-    FromRAMToVRAM(line, currentline);
+    InsertLinesIntoText (currentline - 1, highestline, 1);
 end;
 
 procedure Return;
 begin
     CursorDown;
     column := 1;
-    GotoWindowXY(EditWindowPtr, column, screenline);
 
     if insertmode then
         InsertLine;
+
+    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, ' highestl: ', highestline, ' Return   ');
+
 end;
 
 procedure deleteline;
@@ -433,7 +440,7 @@ begin
     FromVRAMToRAM(line, currentline + ((maxlength + 1) - screenline));
 
     if highestline > currentline + (maxlength - screenline) then
-        quick_display(1, maxlength,line);
+        quick_display(1, maxlength, line);
 
     DeleteLinesFromText(currentline, highestline, 1);
 
@@ -522,7 +529,7 @@ begin
 
     GotoWindowXY(EditWindowPtr, 1, screenline);
     ClrEolWindow(EditWindowPtr);
-    quick_display(1,screenline,line);
+    quick_display(1, screenline, line);
     FromRAMToVRAM(line, currentline);
 end;
 
