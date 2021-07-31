@@ -309,20 +309,17 @@ begin
 
 (*  Bloqueia as linhas novas, de forma que na busca por trechos em
 *   branco, elas não sejam consideradas. *)
-
     for i := (TotalLines + 1) to (TotalLines + BlankLines) do 
         emptylines[i] := false;
 
 (*  Procura por blocos vazios do tamanho exato que precisamos, para 
 *   redirecionar o bloco de texto na VRAM. *)
-
     NewBeginBlock := SearchForBlankBlock(BlankLines);
 
     for i := (CurrentLine + 1) to (CurrentLine + BlankLines) do 
     begin
 
 (*  Reposiciona, na tabela de alocações, o bloco de texto da VRAM. *)
-
         textlines[i].VRAMBank       := textlines[NewBeginBlock + 
                                     (i - CurrentLine) + 1].VRAMBank;
         textlines[i].VRAMPosition   := textlines[NewBeginBlock + 
@@ -330,11 +327,9 @@ begin
     end;
 
 (*  Novo máximo, acrescido de BlankLines. *)
-
     TotalLines := TotalLines + BlankLines;
 
 (*  Marca no vetor emptylines, que essas linhas estão bloqueadas. *)
-    
     for i := (CurrentLine + 1) to TotalLines do
         emptylines[i] := false;
 end;

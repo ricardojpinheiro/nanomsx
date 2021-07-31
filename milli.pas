@@ -289,9 +289,10 @@ end;
 procedure character(inkey: char);
 begin
     CursorOff;
-
-    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, ' highestl: ', highestline, ' Char');
-
+{
+    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, 
+    ' highestl: ', highestline, 'line[', currentline, ']=', line, ' Char    ');
+}
     FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
 
@@ -393,12 +394,12 @@ end;
 
 procedure CursorDown;
 begin
-    if currentline >= highestline then
-        exit;
-    
     currentline :=  currentline + 1;
     screenline  :=  screenline  + 1;
-
+{
+    if (currentline - 1) >= (highestline - 1) then
+        exit;
+}
     if screenline > (maxlength - 1) then
     begin
         GotoWindowXY(EditWindowPtr, 1, 2);
@@ -417,7 +418,7 @@ procedure InsertLine;
 begin
     GotoWindowXY(EditWindowPtr, column, screenline + 1);
     InsLineWindow(EditWindowPtr);
-    InsertLinesIntoText (currentline - 1, highestline, 1);
+    InsertLinesIntoText (currentline, highestline, 1);
 end;
 
 procedure Return;
@@ -427,9 +428,9 @@ begin
 
     if insertmode then
         InsertLine;
-
+{
     gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, ' highestl: ', highestline, ' Return   ');
-
+}
 end;
 
 procedure deleteline;
@@ -471,6 +472,10 @@ begin
         CursorUp;
         EndLine;
     end;
+
+    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, 
+    ' highestl: ', highestline, ' line[', currentline, ']=', line, ' CursL    ');
+    
 end;
 
 procedure CursorRight;
@@ -482,6 +487,10 @@ begin
         CursorDown;
         column := 1;
     end;
+
+    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, 
+    ' highestl: ', highestline, ' line[', currentline, ']=', line, ' CursR    ');
+    
 end;
 
 procedure ins;
@@ -1353,6 +1362,10 @@ begin
         CursorOn;
         GetKey (key, iscommand);
         CursorOff;
+        
+        gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, 
+                                ' highestl: ', highestline);
+        
         if iscommand then
             handlefunc(key)
         else
