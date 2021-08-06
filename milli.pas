@@ -69,9 +69,6 @@ begin
     GotoWindowXY(EditWindowPtr, x, y);
     WriteWindow (EditWindowPtr, s);
     ClrEolWindow(EditWindowPtr);
-
-    gotoxy (50, y); writeln(textlines[y].VRAMBank, ' ' , textlines[y].VRAMposition, ' ', emptylines[y]);
-
 end;
 
 procedure StatusLine (message: str80);
@@ -208,6 +205,7 @@ begin
             emptylines[currentline] := false;
             currentline := currentline + 1;
         end;
+        emptylines[currentline] := false;
         
 (*  Problema, gravidade alta: Se o arquivo for grande demais pro
 *   editor, ele tem que ler somente a parte que dá pra ler e parar.*)
@@ -230,9 +228,6 @@ begin
     DisplayFileNameOnTop;
 
     DrawScreen(1);
-
-    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, ' highestl: ', highestline, ' ReadFile  ');
-            
 end;
 
 procedure InitTextEditor;
@@ -267,7 +262,6 @@ begin
     for i := 1 to maxlines do
     begin
         InitVRAM(i, counter); 
-        emptylines[i] := true;
         counter := counter + maxcols;
     end;
 
@@ -302,9 +296,6 @@ end;
 procedure character(inkey: char);
 begin
     CursorOff;
-
-    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, 
-    ' highestl: ', highestline, ' line[', currentline, ']=', line, ' Char    ');
 
     FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
@@ -400,11 +391,6 @@ begin
     end
     else
         screenline := screenline - 1;
-
-    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, 
-    ' highestl: ', highestline, ' line[', currentline, ']=', line, ' CursU    ');
-
-
 end;
 
 procedure CursorDown;
@@ -424,10 +410,6 @@ begin
         FromVRAMToRAM(line, currentline);
         quick_display(1, screenline, line);
     end;
-
-    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, 
-    ' highestl: ', highestline, ' line[', currentline, ']=', line, ' CursD    ');
-
 end;
 
 procedure InsertLine;
@@ -444,11 +426,6 @@ begin
 
     if insertmode then
         InsertLine;
-
-    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, 
-    ' highestl: ', highestline, ' line[', currentline, ']:=', line, ' Return    ');
-
-
 end;
 
 procedure deleteline;
@@ -490,10 +467,6 @@ begin
         CursorUp;
         EndLine;
     end;
-
-    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, 
-    ' highestl: ', highestline, ' line[', currentline, ']=', line, ' CursL    ');
-    
 end;
 
 procedure CursorRight;
@@ -505,10 +478,6 @@ begin
         CursorDown;
         column := 1;
     end;
-
-    gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, 
-    ' highestl: ', highestline, ' line[', currentline, ']=', line, ' CursR    ');
-    
 end;
 
 procedure ins;
@@ -1380,10 +1349,6 @@ begin
         CursorOn;
         GetKey (key, iscommand);
         CursorOff;
-        
-        gotoxy (2, 1); writeln ('screenl: ', screenline, ' currentl: ', currentline, 
-                                ' highestl: ', highestline, ' Boo');
-        
         if iscommand then
             handlefunc(key)
         else
