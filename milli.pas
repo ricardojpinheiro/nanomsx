@@ -1202,8 +1202,8 @@ begin
     WritelnWindow(EditWindowPtr, 'Ctrl+N - Start a replacing session | Ctrl+Q - Start backward search (F8)');
     WritelnWindow(EditWindowPtr, 'BS - Delete character before cursor| SELECT+W - Next occurrence forward');
     WritelnWindow(EditWindowPtr, 'DEL - Delete character under cursor| SELECT+Q - Next occurrence backward');
-    WritelnWindow(EditWindowPtr, 'SELECT-DEL - Delete current line   | Ctrl+T - Go to specified line (F7)');
-    WritelnWindow(EditWindowPtr, 'SELECT-D - Report line/word/char count');
+    WritelnWindow(EditWindowPtr, 'SELECT-DEL - Delete current line   | SELECT+Y - Remove current line');
+    WritelnWindow(EditWindowPtr, 'Ctrl+T - Go to specified line (F7) | SELECT-D - Report line/word/char count');
     repeat until keypressed;
     DrawScreen(1);
 end;
@@ -1254,6 +1254,7 @@ begin
                             68, 100:    Location  (HowMany);              (* D *)
                             81, 113:    WhereIs   (backwardsearch, true); (* Q *)
                             87, 119:    WhereIs   (forwardsearch , true); (* W *)
+                            89, 121:    RemoveLine;                       (* Y *)
                             else    delay(10);
                         end;
                     end;
