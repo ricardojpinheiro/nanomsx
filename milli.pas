@@ -104,7 +104,7 @@ begin
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 9;
                         BlinkSequence[3] := 22; BlinkSequence[4] := 34;
                         BlinkSequence[5] := 43; BlinkSequence[6] := 55;
-                        Line1 := '^G Help ^O Write Out ^W Where Is ^K CUT   ^C Location ~D Line count';
+                        Line1 := '^G Help ^O Write Out ^W Where Is ^K CUT   ^C Location ~C Line count';
                         Line2 := '^Z Exit ^P Read File ^N Replace  ^U PASTE ^J Align    ^T Go To Line';
                     end;
         search:     begin
@@ -168,72 +168,31 @@ begin
     FastWriteln(filename);
 end;
 
-procedure ReadFile (AskForName: boolean);
-var
-    maxlinesnotreached: boolean;
-    VRAMAddress:        integer;
-
-begin
-    maxlinesnotreached  := false;
-
-    if AskForName then
-    begin
-        GotoXY(1, maxlength + 1);
-        ClrEol;
-        Blink(1, maxlength + 1, maxwidth + 2);
-        temp := concat('File Name to Read: ');
-        FastWrite(temp);
-        read(filename);
-    end;
-    
-    assign(textfile, filename);
-    {$i-}
-    reset(textfile);
-    {$i+}
-
-    if (ioresult <> 0) then
-        StatusLine('New file')
-    else
-    begin
-        currentline := 1;
-
-        while not eof(textfile) do
-        begin
-            FillChar(line, sizeof(line), chr(32));
-            readln(textfile, line);
-            FromRAMToVRAM(line, currentline);
-            emptylines[currentline] := false;
-            currentline := currentline + 1;
-        end;
-        emptylines[currentline] := false;
-        
-(*  Problema, gravidade alta: Se o arquivo for grande demais pro
-*   editor, ele tem que ler somente a parte que dá pra ler e parar.*)
-        
-        str(currentline - 1, tempnumber0);
-
-        if maxlinesnotreached then
-            temp := concat('File is too long. Read ', tempnumber0, ' lines. ')
-        else
-            temp := concat('Read ', tempnumber0, ' lines.');
-
-        StatusLine (temp);
-    end;
-
-    close(textfile);
-
-    highestline := currentline; currentline := 1; column := 1;
-    screenline  := 1;           insertmode  := true;
-
-    DisplayFileNameOnTop;
-
-    DrawScreen(1);
-end;
-
-procedure InitTextEditor;
+procedure InitStructures;
 var
     counter:    real;
 
+begin
+    counter    := startvram;
+    
+(*  Initialize structure. *)
+
+    StatusLine('Initializing structures...');
+    for i := 1 to maxlines do
+    begin
+        InitVRAM(i, counter); 
+        counter := counter + maxcols;
+    end;
+
+(*  Erase VRAM banks, from startvram till the end. *)
+    StatusLine('Wiping memory, please be patient...');
+    fillvram(0, startvram   , 0, $FFFF - startvram);
+    fillvram(1, 0           , 0, $FFFF);
+    
+    ClearStatusLine;
+end;
+
+procedure InitTextEditor;
 begin
     GetScreenStatus(ScreenStatus);
     
@@ -247,28 +206,13 @@ begin
 
 (*  Some variables. *)   
     currentline := 1; screenline := 1;         highestline := 1;
-    column      := 1; counter    := startvram; insertmode  := false;
-    savedfile   := false;   
+    column      := 1; insertmode  := false;    savedfile   := false;   
     FillChar(filename,      sizeof(filename),       chr(32));
     FillChar(temp,          sizeof(temp),           chr(32));
     FillChar(emptyline,     sizeof(emptyline),      chr(32));
     FillChar(filename,      sizeof(filename),       chr(32));
     FillChar(searchstring,  sizeof(searchstring),   chr(32));
     FillChar(replacestring, sizeof(replacestring),  chr(32));
-
-(*  Initialize structure. *)
-
-    GotoXY(1, 1); FastWriteln('Initializing structures...');
-    for i := 1 to maxlines do
-    begin
-        InitVRAM(i, counter); 
-        counter := counter + maxcols;
-    end;
-
-(*  Erase VRAM banks, from startvram till the end. *)
-    GotoXY(1, 2); FastWriteln('Wiping memory, please be patient...');
-    fillvram(0, startvram   , 0, $FFFF - startvram);
-    fillvram(1, 0           , 0, $FFFF);
 
 (*  Set new function keys. *)
     SetFnKey(1, chr(7));  SetFnKey(2, chr(26)); SetFnKey(3, chr(15));
@@ -539,6 +483,70 @@ begin
         EndLine;
     end;
     del;
+end;
+
+procedure ReadFile (AskForName: boolean);
+var
+    maxlinesnotreached: boolean;
+    VRAMAddress:        integer;
+
+begin
+    maxlinesnotreached  := false;
+
+    if AskForName then
+    begin
+        GotoXY(1, maxlength + 1);
+        ClrEol;
+        Blink(1, maxlength + 1, maxwidth + 2);
+        temp := concat('File Name to Read: ');
+        FastWrite(temp);
+        read(filename);
+    end;
+
+    InitStructures;
+    
+    assign(textfile, filename);
+    {$i-}
+    reset(textfile);
+    {$i+}
+
+    if (ioresult <> 0) then
+        StatusLine('New file')
+    else
+    begin
+        currentline := 1;
+
+        while not eof(textfile) do
+        begin
+            FillChar(line, sizeof(line), chr(32));
+            readln(textfile, line);
+            FromRAMToVRAM(line, currentline);
+            emptylines[currentline] := false;
+            currentline := currentline + 1;
+        end;
+        emptylines[currentline] := false;
+        
+(*  Problema, gravidade alta: Se o arquivo for grande demais pro
+*   editor, ele tem que ler somente a parte que dá pra ler e parar.*)
+        
+        str(currentline - 1, tempnumber0);
+
+        if maxlinesnotreached then
+            temp := concat('File is too long. Read ', tempnumber0, ' lines. ')
+        else
+            temp := concat('Read ', tempnumber0, ' lines.');
+
+        StatusLine (temp);
+    end;
+
+    close(textfile);
+
+    highestline := currentline; currentline := 1; column := 1;
+    screenline  := 1;           insertmode  := true;
+
+    DisplayFileNameOnTop;
+
+    DrawScreen(1);
 end;
 
 procedure WriteOut (AskForName: boolean);
@@ -1285,6 +1293,7 @@ begin
 
 (*  Init text editor routines and variables. *)    
         InitTextEditor;
+        InitMainScreen;
         
         if paramcount > 0 then
         begin
@@ -1336,9 +1345,9 @@ begin
                     screenline := newline;
             end;
         end
+        else
+            InitStructures;
     end;
-    
-    InitMainScreen;
 
     for i := 1 to maxwidth do
         tabset[i] := (i mod tabnumber) = 1;
