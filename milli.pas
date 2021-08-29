@@ -373,33 +373,19 @@ begin
 end;
 
 procedure deleteline;
+var
+    aux: integer;
 begin
-    DelLineWindow(EditWindowPtr);
-
+    aux := currentline + ((maxlength - 1) - screenline);
     FillChar(line, sizeof(line), chr(32));
-    FromVRAMToRAM(line, currentline + ((maxlength + 1) - screenline));
-
-    if highestline > currentline + (maxlength - screenline) then
-        quick_display(1, maxlength, line);
-
+    FromVRAMToRAM(line, aux);
+    
+    GotoWindowXY(EditWindowPtr, column, screenline);
+    DelLineWindow(EditWindowPtr);
     DeleteLinesFromText(currentline, highestline, 1);
 
-    FillChar(line, sizeof(line), chr(32));
-    FromVRAMToRAM(line, currentline);
-
-    if line <> emptyline then
-        line := emptyline;
-{
-
-    for i := currentline to highestline + 1 do
-        linebuffer[i]               := linebuffer [i + 1];
-
-    linebuffer [highestline + 2]    := emptyline;
-    highestline                     := highestline - 1;
-
-    if currentline > highestline then
-        highestline                 := currentline;
-}
+    if highestline > aux then
+        quick_display(1, maxlength - 1, line);
 end;
 
 procedure CursorLeft;
@@ -476,13 +462,20 @@ end;
 procedure backspace;
 begin
     if column > 1 then
-        column  := column - 1
+    begin
+        column  := column - 1;
+        del;
+    end
     else
     begin
+        deleteline;
         CursorUp;
         EndLine;
+        FillChar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, currentline + ((maxlength - 1) - screenline));
+        if highestline > (currentline + ((maxlength - 1) - screenline)) then
+            quick_display(1, maxlength - 1, line);    
     end;
-    del;
 end;
 
 procedure ReadFile (AskForName: boolean);
@@ -1256,7 +1249,7 @@ begin
         SELECT:     begin
                         key := ord(readkey);
                         case key of
-                            DELETE:     RemoveLine;
+                            DELETE:     deleteline;
                             TAB:        backtab;
                             68, 100:    Location  (HowMany);              (* D *)
                             81, 113:    WhereIs   (backwardsearch, true); (* Q *)
