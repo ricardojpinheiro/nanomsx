@@ -22,7 +22,7 @@ A MSX 2 with 128 Kb of VRAM and MSX-DOS 2 (if you use Nextor, it would be a must
 There are two more features that I want to create for Milli: Some text-block commands (copy, move and remove text-blocks), and line numbering. As I may have said, there are a lot of improvements that we can do, in order to use less VRAM memory, speed up the code... But sorry pals, I won't do even more.  
 
 ### Download.
-Finally, the download link. [Here it goes](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli.com). If you want to get the source code, [you can find a ZIP file here](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli.zip). I used Qed-Editor as the base editor, but I cannot forget some Kari Lammassaari (1997) libraries, like text window, blink and fastwrite routines (there is more, I guess), and PopolonY2K framework, from which I got some SCREEN 0 and MSX-DOS 2 routines. My greetings to them.
+Finally, the download link. [Here it goes](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli.com). If you want to get the source code, [you can find a ZIP file here](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli.zip). I used Qed-Editor as the base editor, but I cannot forget some [Kari Lammassaari (in memorian) libraries](https://manuel.msxnet.org/msx/softw/), like text window, blink and fastwrite routines (there is more, I guess), and [PopolonY2K framework](http://www.popolony2k.com.br/), from which I got some SCREEN 0 and MSX-DOS 2 routines. My greetings to them.
 
 ### Screenshots.
 We all love screenshots! Who doesn´t? Here it goes some of them:
