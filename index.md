@@ -1,7 +1,7 @@
 # Milli, a wannabe GNU nano-like text editor for MSX.
 ## by Ricardo Jurczyk Pinheiro (ricardojpinheiro@gmail.com)
 
-This editor resembles the GNU nano editor <https://www.nano-editor.org>, using the same look-and-feel and most of the keystrokes. I decided to develop a text editor because I'm tired of using AKID/KID/TED/MPW/whatever in my MSXs, when I need to edit some code, or even a batch file. So, think about it when you start complaining with me, asking why I didn't implemented this or that amazing feature. 
+This editor resembles the [GNU nano editor](https://www.nano-editor.org), using the same look-and-feel and most of the keystrokes. I decided to develop a text editor because I'm tired of using AKID/KID/TED/MPW/whatever in my MSXs, when I need to edit some code, or even a batch file. So, think about it when you start complaining with me, asking why I didn't implemented this or that amazing feature. 
 
 ### Disclaimer.
 This editor is strongly based on [Qed-Editor](https://texteditors.org/cgi-bin/wiki.pl?Qed-Pascal), a pretty old (1987!) text editor. By the way, there isn't any licenses regarding the Qed-Editor's source code, and I know it isn't PD. But it's author is unknown, it's open source and I gave all the credits to her/him. So, don't be a license zealot asking about code licenses to a software which is older than GPL 1.0.
