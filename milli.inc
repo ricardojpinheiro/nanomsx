@@ -24,7 +24,7 @@ const
 (*    CONTROLR    = 18; *)
     CONTROLS    = 19;
     CONTROLT    = 20;
-    CONTROLU    = 21;
+(*    CONTROLU    = 21; *)
     CONTROLV    = 22;
     CONTROLW    = 23;
 (*    CONTROLX    = 24; *)
@@ -226,7 +226,7 @@ end;
 
 (* Here we use MSX-DOS 2 to do the error handling. *)
 
-procedure ErrorCode (ExitsOrNot: boolean);
+function ErrorCode (ExitsOrNot: boolean): str80;
 var
     ErrorCodeNumber: byte;
     ErrorMessage: TMSXDOSString;
@@ -234,7 +234,7 @@ var
 begin
     ErrorCodeNumber := GetLastErrorCode;
     GetErrorMessage (ErrorCodeNumber, ErrorMessage);
-    WriteLn (ErrorMessage);
+    ErrorCode := ErrorMessage;
     if ExitsOrNot = true then
         Exit;
 end;
@@ -274,6 +274,7 @@ begin
             counter         := 0;
         end;
     end;
+    emptylines[linenumber] := true;
 end;
 
 function SearchForBlankBlock(BlankLines: integer): integer;
@@ -384,7 +385,7 @@ procedure CommandLineVersion;
 begin
     clrscr;
     CommandLineBanner;
-    FastWriteln('Version 0.2 - Copyright (c) 2020, 2021 Brazilian MSX Crew.');
+    FastWriteln('Version 0.1 - Copyright (c) 2020, 2021 Brazilian MSX Crew.');
     FastWriteln('Some rights reserved.');
     writeln;
     FastWriteln('This editor resembles the GNU nano editor <https://www.nano-editor.org>,');

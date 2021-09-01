@@ -16,6 +16,8 @@ program milli;
 {$i d:blink.inc}
 {$i d:milli.inc}
 
+{$u-}
+
 var
     currentline, highestline:       integer; 
     key, screenline, column:        byte;
@@ -290,10 +292,7 @@ end;
 
 procedure EndFile;
 begin
-(*  Problema, gravidade baixa: Se eu coloco um valor maior do que 1 em
-*   screenline, ele coloca na tela anterior. Bem, a ser resolvido
-*   depois. *)
-    currentline := highestline - maxlength + 1;
+    currentline := highestline - (maxlength - 2);
     screenline  := 1;
     column      := 1;
     DrawScreen(1);
@@ -304,9 +303,6 @@ begin
     currentline := WhereYWindow(EditWindowPtr);
     screenline  := currentline;
     column      := 1;
-(*
-    DrawScreen(1);
-*)
 end;
 
 procedure EndLine;
@@ -376,10 +372,10 @@ procedure deleteline;
 var
     aux: integer;
 begin
-    aux := currentline + ((maxlength - 1) - screenline);
+    aux := currentline + (maxlength - screenline);
     FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, aux);
-    
+
     GotoWindowXY(EditWindowPtr, column, screenline);
     DelLineWindow(EditWindowPtr);
     DeleteLinesFromText(currentline, highestline, 1);
@@ -534,8 +530,8 @@ begin
 
     close(textfile);
 
-    highestline := currentline; currentline := 1; column := 1;
-    screenline  := 1;           insertmode  := true;
+    highestline := currentline - 1; currentline := 1; column := 1;
+    screenline  := 1;               insertmode  := true;
 
     DisplayFileNameOnTop;
 
@@ -759,17 +755,13 @@ begin
         end
         else
             searchstring := tempsearchstring;
+    
+    i := currentline;
         
     if direction = forwardsearch then
-    begin
-        stopsearch := highestline;
-        i := currentline + 1;
-    end
+        stopsearch := highestline + 1
     else
-    begin
-        stopsearch := 1;
-        i := currentline - 1;
-    end;
+        stopsearch := 0;
     
     while i <> stopsearch do
     begin
@@ -784,14 +776,12 @@ begin
         begin
             currentline := i;
             if currentline >= maxlength then
-            begin
-                screenline := maxlength - 1;
-                DrawScreen(1);
-            end
+                screenline := maxlength - 1
             else
                 screenline := currentline;
             column := pointer;
-
+            DrawScreen(1);
+            
     (* Redraw the StatusLine, bottom of the window and display keys *)
             ClearStatusLine;
             DisplayKeys (main);
@@ -802,7 +792,6 @@ begin
             i := i + 1
         else
             i := i - 1;
-        
     end;
 
     ClearBlink(1, maxlength + 1, maxwidth + 2);
@@ -821,6 +810,7 @@ var
    
 begin
     DisplayKeys (search);
+
     SetBlinkRate (5, 0);
     GotoXY(1, maxlength + 1);
     ClrEol;
@@ -919,7 +909,7 @@ begin
             FromRAMToVRAM(line, currentline);
             GotoWindowXY(EditWindowPtr, 1, screenline);
             ClrEolWindow(EditWindowPtr);
-            temp := copy(line, 1, maxlength + 1);
+            temp := copy(line, 1, maxcols + 1);
             WriteWindow(EditWindowPtr, temp);
         end;
     end;
@@ -1159,25 +1149,28 @@ begin
     
     GotoXY(length(temp) + 1, maxlength + 1);
     readln(destline, destcolumn);
- 
-    if destline = 1 then
-        destline := destline + 1;
- 
+
     if destline >= highestline then
         destline := highestline;
-    
+
     FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, destline);    
     i := length(line);
     
     if destcolumn > i then
         destcolumn := i;
- 
-    currentline     := destline - 1;
+(*  Here, if destline is in the last page... *)
+    
+    if destline >= (highestline - maxlength) then
+        i := 2
+    else
+        i := 1;
+
+    currentline     := destline;
     screenline      := 1;
     column          := destcolumn;
-    
-    DrawScreen(1);
+
+    DrawScreen(i);
   
 (* Redraw the StatusLine, bottom of the window and display keys *)
 
