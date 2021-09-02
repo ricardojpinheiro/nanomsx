@@ -45,13 +45,13 @@ const
     Space       = 32;
     DELETE      = 127;
 
-    startvram   = 5120;
+    startvram   = $1400;
     limitvram   = 65408;
 
-    maxlines    = 980;
+    maxlines    = 327;
     maxwidth    = 78;
     maxlength   = 21;
-    maxcols     = 128;
+    maxcols     = 80;
 
 type
     RStructure          = record
@@ -59,11 +59,10 @@ type
         VRAMposition:       integer;
     end;
     
-    str80               =   string [80];
-    linestring          =   string [128];
-    KeystrokeLines      =   (main, search, replace, align);
-    Directions          =   (forwardsearch, backwardsearch);
-    LocationOptions     =   (Position, HowMany);
+    linestring          = string [maxcols];
+    KeystrokeLines      = (main, search, replace, align);
+    Directions          = (forwardsearch, backwardsearch);
+    LocationOptions     = (Position, HowMany);
 
 var
     textlines:          array [1..maxlines] of RStructure;
@@ -226,7 +225,7 @@ end;
 
 (* Here we use MSX-DOS 2 to do the error handling. *)
 
-function ErrorCode (ExitsOrNot: boolean): str80;
+function ErrorCode (ExitsOrNot: boolean): linestring;
 var
     ErrorCodeNumber: byte;
     ErrorMessage: TMSXDOSString;
@@ -388,18 +387,20 @@ begin
     FastWriteln('Version 0.1 - Copyright (c) 2020, 2021 Brazilian MSX Crew.');
     FastWriteln('Some rights reserved.');
     writeln;
-    FastWriteln('This editor resembles the GNU nano editor <https://www.nano-editor.org>,');
-    FastWriteln('using the same look-and-feel and a lot of keystrokes.');
+    FastWriteln('This editor resembles the GNU nano editor, with the same');
+    FastWriteln('look and feel and most of the keystrokes.');
     writeln;
-    FastWriteln('License GPLv3+: GNU GPL v. 3 or later <https://gnu.org/licenses/gpl.html>');
-    FastWriteln('This is free software: you are free to change and redistribute it.');
-    FastWriteln('There is NO WARRANTY to the extent permitted by law.');
+    FastWriteln('License GPLv3+: GNU GPL v. 3, so... This is free software,');
+    FastWriteln('so you are free to change and redistribute it. But there is');
+    FastWriteln('NO WARRANTY to the extent permitted by law.');
     writeln;
     FastWriteln('By the way, the name, ''milli'', may come from two places:');
-    FastWriteln('1 - A unit prefix in the metric system denoting a factor of one thousandth.');
-    FastWriteln('2 - The restaurant at the end of the Universe, called Milliways, from');
-    FastWriteln('the Hitchhiker''s Guide to the Galaxy series, written by Douglas Adams.');
+    FastWriteln('1 - A unit prefix in the metric system denoting a factor of');
+    FastWriteln('one thousandth.');
+    FastWriteln('2 - The restaurant at the end of the Universe, the Milliways');
+    FastWriteln('from the Hitchhiker''s Guide to the Galaxy book series.');
     FastWriteln('Personally, I would prefer the last one. ');
+    FastWriteln('http://www.nano-editor.org http://gnu.org/licenses/gpl.html');
     ClearAllBlinks;
     halt;
 end;
@@ -415,14 +416,14 @@ begin
     writeln;
     FastWriteln('Parameters: ');
 {    
-    FastWriteln('/b             - Save backups of existing files.');
-    FastWriteln('/e             - Convert typed tabs to spaces.');
+    FastWriteln('/b      - Save backups of existing files.');
+    FastWriteln('/e      - Convert typed tabs to spaces.');
 }
-    FastWriteln('/l<l>          - Start at line l.');
-    FastWriteln('/c<c>          - Start at column c.');
-    FastWriteln('/t<n>          - Make a tab this number (n) of columns wide.');
-    FastWriteln('/h             - Show this help text and exit.');
-    FastWriteln('/v             - Output version information and exit.');
+    FastWriteln('/l<l>   - Start at line l.');
+    FastWriteln('/c<c>   - Start at column c.');
+    FastWriteln('/t<n>   - Make a tab this number (n) of columns wide.');
+    FastWriteln('/h      - Show this help text and exit.');
+    FastWriteln('/v      - Output version information and exit.');
     writeln;
     ClearAllBlinks;
     halt;

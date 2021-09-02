@@ -20,22 +20,21 @@ program milli;
 
 var
     currentline, highestline:       integer; 
+    line:                           linestring;
     key, screenline, column:        byte;
-    line, emptyline:                linestring;
-{
-    linebuffer:                     array [1.. maxlines] of lineptr;
-}
     tabset:                         array [1..maxwidth] of boolean;
     textfile:                       text;
-    searchstring, replacestring:    str80;
-    filename:                       linestring;
-    savedfile, insertmode,
-    iscommand:                      boolean;
-    tempnumber0:                    string[6];
+    searchstring, replacestring,
+    filename:                       string[40];
+    insertmode, iscommand:          boolean;
+    tempnumber0, tempnumber1,
+    tempnumber2:                    string[6];
     i, j, tabnumber, newline,
     newcolumn, returncode:          integer;
     c:                              char;
 
+    totalchar:                      real;
+    
     Registers:                      TRegs;
     ScreenStatus:                   TScreenStatus;
    
@@ -73,7 +72,7 @@ begin
     ClrEolWindow(EditWindowPtr);
 end;
 
-procedure StatusLine (message: str80);
+procedure StatusLine (message: linestring);
 var
     lengthmessage, position: byte;
 begin
@@ -91,7 +90,7 @@ end;
 procedure DisplayKeys (whichkey: KeystrokeLines);
 var
     BlinkSequence: array [1..6] of byte;
-    Line1, Line2: str80;
+    Line1, Line2: linestring;
     BlinkLength: byte;
     
 begin
@@ -141,8 +140,8 @@ end;
 
 procedure DrawScreen (j: byte);
 var
-    line:   linestring;
     aux:    integer;
+
 begin
     if highestline <= (maxlength - j) then
         aux := highestline
@@ -153,9 +152,9 @@ begin
 
     for i := 1 to aux do
     begin
-        FillChar(line, sizeof(line), chr(32));
-        FromVRAMToRAM(line, currentline - screenline + i);
-        quick_display(1, i, line);
+        FillChar(temp, sizeof(temp), chr(32));
+        FromVRAMToRAM(temp, currentline - screenline + i);
+        quick_display(1, i, temp);
     end;
 end;
 
@@ -188,9 +187,10 @@ begin
 
 (*  Erase VRAM banks, from startvram till the end. *)
     StatusLine('Wiping memory, please be patient...');
+
     fillvram(0, startvram   , 0, $FFFF - startvram);
     fillvram(1, 0           , 0, $FFFF);
-    
+
     ClearStatusLine;
 end;
 
@@ -208,10 +208,12 @@ begin
 
 (*  Some variables. *)   
     currentline := 1; screenline := 1;         highestline := 1;
-    column      := 1; insertmode  := false;    savedfile   := false;   
+    column      := 1; insertmode  := false;
     FillChar(filename,      sizeof(filename),       chr(32));
     FillChar(temp,          sizeof(temp),           chr(32));
+(*
     FillChar(emptyline,     sizeof(emptyline),      chr(32));
+*)
     FillChar(filename,      sizeof(filename),       chr(32));
     FillChar(searchstring,  sizeof(searchstring),   chr(32));
     FillChar(replacestring, sizeof(replacestring),  chr(32));
@@ -252,13 +254,7 @@ begin
     begin
         GotoWindowXY(EditWindowPtr, column, screenline);
         WriteWindow(EditWindowPtr, inkey);
-{
-        if line = emptyline then
-        begin
-            InsertLinesIntoText (currentline - 1, highestline, 1);
-            FillChar(line, sizeof(line), chr(32));
-        end;
-}
+
         while length(line) <= column do
             line := line + ' ';
 
@@ -441,8 +437,8 @@ begin
         exit;
     end;
 
-    if line = emptyline then
-        line := '';
+    if length(line) = 0 then
+        FillChar(line, sizeof(line), chr(32));
 
     while length(line) < column do
         line := line + ' ';
@@ -477,10 +473,9 @@ end;
 procedure ReadFile (AskForName: boolean);
 var
     maxlinesnotreached: boolean;
-    VRAMAddress:        integer;
 
 begin
-    maxlinesnotreached  := false;
+    totalchar := 0;
 
     if AskForName then
     begin
@@ -505,19 +500,21 @@ begin
     begin
         currentline := 1;
 
-        while not eof(textfile) do
+        while (not eof(textfile)) and (currentline <= maxlines) do
         begin
             FillChar(line, sizeof(line), chr(32));
             readln(textfile, line);
             FromRAMToVRAM(line, currentline);
             emptylines[currentline] := false;
             currentline := currentline + 1;
+            totalchar := totalchar + length(line);
         end;
         emptylines[currentline] := false;
         
 (*  Problema, gravidade alta: Se o arquivo for grande demais pro
 *   editor, ele tem que ler somente a parte que dá pra ler e parar.*)
-        
+ 
+{        
         str(currentline - 1, tempnumber0);
 
         if maxlinesnotreached then
@@ -526,12 +523,14 @@ begin
             temp := concat('Read ', tempnumber0, ' lines.');
 
         StatusLine (temp);
-    end;
+}
 
-    close(textfile);
+    end;
 
     highestline := currentline - 1; currentline := 1; column := 1;
     screenline  := 1;               insertmode  := true;
+
+    close(textfile);
 
     DisplayFileNameOnTop;
 
@@ -574,7 +573,6 @@ begin
     end;
 
     close(textfile);
-    savedfile := true;
     
     ClearBlink(1, maxlength + 1, maxwidth + 2);
     str(highestline + 1, tempnumber0);
@@ -713,10 +711,10 @@ begin
     FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
     
-    if (line <> emptyline) then
-        line := emptyline;
+    if length(line) <> 0 then
+        FillChar(line, sizeof(line), chr(32));
 
-    line := emptyline;
+    FillChar(line, sizeof(line), chr(32));
     FromRAMToVRAM(line, currentline);
     CursorOn;
 end;
@@ -724,7 +722,7 @@ end;
 procedure WhereIs (direction: Directions; nextoccurrence: boolean);
 var
     pointer, len        : integer;
-    tempsearchstring    : str80;
+    tempsearchstring    : linestring;
     stopsearch          : integer;
  
 begin
@@ -806,7 +804,7 @@ var
     searchlength, replacementlength,
     searchperline:                      byte;
     choice:                             char;
-    tempsearchstring:                   str80;
+    tempsearchstring:                   linestring;
    
 begin
     DisplayKeys (search);
@@ -1030,12 +1028,10 @@ procedure Location (Types: LocationOptions);
 type
     ASCII = set of 0..255;
 var
-    tempnumber1, tempnumber2: string[6];
-    totalwords              : integer;
-    abovechar, totalchar, 
-    percentchar             : real;
-    temp2                   : linestring;
-    NoPrint, Print, AllChars: ASCII;
+    totalwords:                 integer;
+    abovechar, percentchar:     real;
+    temp2:                      linestring;
+    NoPrint, Print, AllChars:   ASCII;
 
 begin
     FillChar(temp, sizeof(temp), chr(32));
@@ -1044,9 +1040,8 @@ begin
 
     str(currentline, tempnumber0);
     str(highestline, tempnumber1);
-    j := ((currentline * 100) div highestline);
-    str(j, tempnumber2);
-    
+    str(((currentline * 10) / (highestline div 10)):2:0, tempnumber2);
+
     if Types = Position then
         temp := concat('line ', tempnumber0,'/', tempnumber1, ' (', tempnumber2,'%),')
     else
@@ -1054,18 +1049,23 @@ begin
 
     if Types = Position then
     begin
+
 (*  Column count. *)  
+
         FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, currentline);
 
-        j := length(line) + 1;
+        gotoxy (45, 1); writeln(currentline); 
 
+        j := length(line) + 1;
+        
 (*  Calculating percentage. *)        
 
         str(column, tempnumber0);
         str(j, tempnumber1);
    
         i := ((column * 100) div j);
+            
         str(i , tempnumber2);
     
         temp := concat(temp, ' col ',tempnumber0,'/',tempnumber1, ' (', tempnumber2,'%)');
@@ -1076,21 +1076,24 @@ begin
     abovechar := 0;
     
     for i := 1 to currentline - 1 do
+    begin
+        FillChar(line, sizeof(line), chr(32));
+        FromVRAMToRAM(line, i);
         abovechar := abovechar + length(line);
+    end;
 
-    totalchar := abovechar;
     abovechar := abovechar + column;
-    
-    for i := currentline to highestline do
-        totalchar := totalchar + length(line);
     
 (*  Calculating percentage. *)
 
-    percentchar := round(int(((abovechar * 100) / totalchar)));
+    if totalchar <> 0 then
+        percentchar := ((abovechar * 100) / totalchar)
+    else
+        totalchar := 1;
 
     str(abovechar:6:0   ,   tempnumber0);
     str(totalchar:6:0   ,   tempnumber1);
-    str(percentchar:6:0 ,   tempnumber2);
+    str(percentchar:2:0 ,   tempnumber2);
     
     delete(tempnumber0  , 1, RPos(' ', tempnumber0) - 1);
     delete(tempnumber1  , 1, RPos(' ', tempnumber1) - 1);

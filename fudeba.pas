@@ -3,6 +3,7 @@ type
     linestring = string[255];
 var
     S: linestring;
+    teste: longint;
 
 (*  Finds the n-th occurence of a char which is into a string. *)
 
