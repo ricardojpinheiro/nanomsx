@@ -9,7 +9,7 @@ This editor is strongly based on [Qed-Editor](https://texteditors.org/cgi-bin/wi
 ### Some characteristics.
 - Open source (GPL 3.0). So, you can find the code here.
 - All (badly) written in Turbo Pascal 3.0, using SCREEN 0 with blink attributes.
-- Text files may have 980 lines of 78 columns each, at maximum. Maybe I'll improve it soon.
+- Text files may have 327 lines of 80 columns each, at maximum. It'll be improved soon, for sure.
 - Most of the keystrokes from GNU nano text editor, like alignment, search and replace, page down and page up, help (tip: it's F1, or Control-G)...
 - Mmmm... You may use it and tell me, lack of ideas.
 
@@ -25,7 +25,7 @@ This github page reunites some text editors that I've been working with. Milli i
 Finally, the download link. [Here it goes](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli.com). If you want to get the source code, [you can find a ZIP file here](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli.zip). I used Qed-Editor as the base editor, but I cannot forget some [Kari Lammassaari (in memorian) libraries](https://manuel.msxnet.org/msx/softw/), like text window, blink and fastwrite routines (there is more, I guess), and [PopolonY2K framework](http://www.popolony2k.com.br/), from which I got some SCREEN 0 and MSX-DOS 2 routines. My greetings to their work.
 
 ### History
-- [2021-09-01 - v0.1 - First public release](https://github.com/ricardojpinheiro/nanomsx/releases/tag/v0.1).
+- [2021-09-02 - v0.1 - First public release](https://github.com/ricardojpinheiro/nanomsx/releases/tag/v0.1).
 
 ### Screenshots.
 We all love screenshots! Who doesn't? Here it goes some of them:
