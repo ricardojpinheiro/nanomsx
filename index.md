@@ -24,7 +24,7 @@ This github page reunites some text editors that I've been working with. Milli i
 ### Download.
 Finally, the download link. [Here it goes](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli.com). If you want to get the source code, [you can find a ZIP file here](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli.zip). I used Qed-Editor as the base editor, but I cannot forget some [Kari Lammassaari (in memorian) libraries](https://manuel.msxnet.org/msx/softw/), like text window, blink and fastwrite routines (there is more, I guess), and [PopolonY2K framework](http://www.popolony2k.com.br/), from which I got some SCREEN 0 and MSX-DOS 2 routines. My greetings to their work.
 
-###History
+### History
 - [2021-09-01 - v0.1 - First public release](https://github.com/ricardojpinheiro/nanomsx/releases/tag/v0.1).
 
 ### Screenshots.
