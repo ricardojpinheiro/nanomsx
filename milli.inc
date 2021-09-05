@@ -48,10 +48,10 @@ const
     startvram   = $1400;
     limitvram   = 65408;
 
-    maxlines    = 327;
+    maxlines    = 347;
     maxwidth    = 78;
     maxlength   = 21;
-    maxcols     = 80;
+    maxcols     = $50;
 
 type
     RStructure          = record
@@ -221,6 +221,11 @@ begin
         end;
         MSXBDOS (Registers);
     end;
+end;
+
+function IntegerDivision (a, b: real): integer;
+begin
+    IntegerDivision := round(int((a - (a - (b * (a / b)))) / b));
 end;
 
 (* Here we use MSX-DOS 2 to do the error handling. *)
