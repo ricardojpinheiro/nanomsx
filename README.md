@@ -44,9 +44,11 @@ It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse
  - SELECT-D - Report line/word/char count
 
 ## Keystrokes not yet created
- - Any keystrokes regarding mark/unmark/copy/move blocks of text.
+ - Any keystrokes regarding mark/unmark/copy/move text blocks.
 
 ## To the future.
-I hope I can use MSX 2 VRAM (almost all of them) in order to save the file into memory.
+- Fix problems regarding the use of MSX 2's VRAM.
+- Block routines, like copy/move/delete text blocks.
+- Maybe a way of opening two files simultaneously.
 
 MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.
