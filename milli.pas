@@ -138,7 +138,7 @@ begin
     end;
 end;
 
-procedure DrawScreen (j: byte);
+procedure DrawScreen (currentline, screenline: integer; j: byte);
 var
     aux:    integer;
 
@@ -233,8 +233,6 @@ begin
     FastWrite('milli 0.1');
 
     Blink(2, 1, maxwidth);
-    DrawScreen(1);
-
     DisplayFileNameOnTop;
 
     DisplayKeys (main);
@@ -283,7 +281,7 @@ begin
     currentline := 1;
     screenline  := 1;
     column      := 1;
-    DrawScreen(1);
+    DrawScreen(currentline, screenline, 1);
 end;
 
 procedure EndFile;
@@ -291,7 +289,9 @@ begin
     currentline := highestline - (maxlength - 2);
     screenline  := 1;
     column      := 1;
-    DrawScreen(1);
+    DrawScreen(currentline, screenline, 1);
+    screenline  := maxlength - 1;
+    GotoWindowXY(EditWindowPtr, column, screenline);
 end;
 
 procedure BeginLine;
@@ -534,7 +534,7 @@ begin
 
     DisplayFileNameOnTop;
 
-    DrawScreen(1);
+    DrawScreen(currentline, screenline, 1);
 end;
 
 procedure WriteOut (AskForName: boolean);
@@ -612,7 +612,7 @@ begin
     if currentline <= screenline then
         BeginFile
     else
-        DrawScreen(1);
+        DrawScreen(currentline, screenline, 1);
 end;
 
 procedure PageDown;
@@ -622,9 +622,9 @@ begin
         EndFile
     else
         if (highestline - currentline) < maxlength then
-            DrawScreen(2)
+            DrawScreen(currentline, screenline, 2)
         else
-            DrawScreen(1);
+            DrawScreen(currentline, screenline, 1);
 end;
 
 procedure PreviousWord;
@@ -778,7 +778,7 @@ begin
             else
                 screenline := currentline;
             column := pointer;
-            DrawScreen(1);
+            DrawScreen(currentline, screenline, 1);
             
     (* Redraw the StatusLine, bottom of the window and display keys *)
             ClearStatusLine;
@@ -862,7 +862,7 @@ begin
             else
                 screenline := currentline;
 
-            DrawScreen(1);
+            DrawScreen(currentline, screenline, 1);
             column := position;
             Blink(column + 1, screenline + 1, searchlength);
 
@@ -1003,7 +1003,7 @@ begin
     StatusLine(temp);
 
     FromRAMToVRAM(line, currentline);
-    DrawScreen(1);
+    DrawScreen(currentline, screenline, 1);
 
 (*  Problema, gravidade baixa: O ideal é que ele só redesenhe a linha,
 *   e não a página toda. Mas no momento, não está funcionando.
@@ -1040,12 +1040,12 @@ begin
 
     str(currentline, tempnumber0);
     str(highestline, tempnumber1);
-    str(((currentline * 10) / (highestline div 10)):2:0, tempnumber2);
+    str(IntegerDivision(currentline * 100, highestline), tempnumber2);
 
     if Types = Position then
         temp := concat('line ', tempnumber0,'/', tempnumber1, ' (', tempnumber2,'%),')
     else
-        temp := concat(' Lines: ', tempnumber1);
+        temp := concat(' Lines:', tempnumber1);
 
     if Types = Position then
     begin
@@ -1054,8 +1054,6 @@ begin
 
         FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, currentline);
-
-        gotoxy (45, 1); writeln(currentline); 
 
         j := length(line) + 1;
         
@@ -1086,23 +1084,14 @@ begin
     
 (*  Calculating percentage. *)
 
-    if totalchar <> 0 then
-        percentchar := ((abovechar * 100) / totalchar)
-    else
-        totalchar := 1;
+    str(abovechar:6:0,   tempnumber0);
+    str(totalchar:6:0,   tempnumber1);
+    str(IntegerDivision (abovechar * 100, totalchar),   tempnumber2);
 
-    str(abovechar:6:0   ,   tempnumber0);
-    str(totalchar:6:0   ,   tempnumber1);
-    str(percentchar:2:0 ,   tempnumber2);
-    
-    delete(tempnumber0  , 1, RPos(' ', tempnumber0) - 1);
-    delete(tempnumber1  , 1, RPos(' ', tempnumber1) - 1);
-    delete(tempnumber2  , 1, RPos(' ', tempnumber2) - 1);
-    
     if Types = Position then
         temp := concat(temp, ' char ', tempnumber0,'/', tempnumber1, ' (', tempnumber2,'%)')
     else
-        temp := concat(temp, ' Chars: ', tempnumber1);
+        temp := concat(temp, ' Chars:', tempnumber1);
 
 (*  Word count *)
 
@@ -1128,7 +1117,7 @@ begin
         
         str(TotalWords      , tempnumber0);
         insert(tempnumber0  , temp  , 1);
-        insert('Words: '    , temp  , 1);
+        insert('Words:'     , temp  , 1);
     end;
 
     StatusLine(temp);
@@ -1173,7 +1162,7 @@ begin
     screenline      := 1;
     column          := destcolumn;
 
-    DrawScreen(i);
+    DrawScreen(currentline, screenline, i);
   
 (* Redraw the StatusLine, bottom of the window and display keys *)
 
@@ -1184,8 +1173,8 @@ procedure Help;
 begin
     ClrWindow(EditWindowPtr);
     WritelnWindow(EditWindowPtr, 'Commands:');
-    WritelnWindow(EditWindowPtr, 'Ctrl-S - Save current file         | Ctrl-O - Save as file (F3)');
-    WritelnWindow(EditWindowPtr, 'Ctrl-P - Read new file             | Ctrl+Z - Close and exit from nano (F2)');
+    WritelnWindow(EditWindowPtr, 'Ctrl+S - Save current file         | Ctrl+O - Save as file (F3)');
+    WritelnWindow(EditWindowPtr, 'Ctrl+P - Read new file             | Ctrl+Z - Close and exit from milli (F2)');
     WritelnWindow(EditWindowPtr, 'Ctrl+G - Display help text (F1)    | Ctrl+C - Report cursor position (F5)');
     WritelnWindow(EditWindowPtr, 'Ctrl+A - To start of line          | Ctrl+Y - One page up');
     WritelnWindow(EditWindowPtr, 'Ctrl+E - To end of line            | Ctrl+V - One page down');
@@ -1201,7 +1190,7 @@ begin
     WritelnWindow(EditWindowPtr, 'SELECT-DEL - Delete current line   | SELECT+Y - Remove current line');
     WritelnWindow(EditWindowPtr, 'Ctrl+T - Go to specified line (F7) | SELECT-D - Report line/word/char count');
     repeat until keypressed;
-    DrawScreen(1);
+    DrawScreen(currentline, screenline, 1);
 end;
 
 
@@ -1329,7 +1318,7 @@ begin
                 if newline >= (maxlength - 1) then
                 begin
                     screenline  := maxlength - 1;
-                    DrawScreen(1);
+                    DrawScreen(currentline, screenline, 1);
                 end
                 else
                     screenline := newline;
