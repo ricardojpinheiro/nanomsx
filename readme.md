@@ -1,4 +1,5 @@
-# nanomsx
+﻿
+# milli
 A GNU nano-like text editor for MSX 2.
 It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse&diff=1&id=Qed-Pascal), and our main approach is to have almost all useful GNU nano funcionalities.
 ## Command-line parameters
@@ -9,9 +10,9 @@ It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse
  - /tn          - Make a tab this number (n) of columns wide.
 
 ## Keystrokes already created
- - Control-P - Read new file
  - Control-S - Save current file
  - Control-O - Save as file (F3)
+ - Control-P - Read new file
  - Control+Z - Close and exit from nano (F2)
  - Control+G - Display help text (F1)
  - Control+C - Report cursor position (F5)
@@ -38,13 +39,16 @@ It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse
  - DEL - Delete character under cursor
  - SELECT+Q - Next occurrence backward
  - SELECT-DEL - Delete current line
+ - SELECT-Y - Remove current line
  - Control+T - Go to specified line (F7)
  - SELECT-D - Report line/word/char count
 
 ## Keystrokes not yet created
- - Any keystrokes regarding mark/unmark/copy/move blocks of text.
+ - Any keystrokes regarding mark/unmark/copy/move text blocks.
 
 ## To the future.
-I hope I can use MSX 2 VRAM (almost all of them) in order to save the file into memory.
+- ~~Fix problems regarding the use of MSX 2's VRAM.~~
+- Block routines, like copy/move/delete text blocks.
+- Maybe a way of opening two files simultaneously.
 
 MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.

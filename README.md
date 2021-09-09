@@ -47,7 +47,7 @@ It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse
  - Any keystrokes regarding mark/unmark/copy/move text blocks.
 
 ## To the future.
-- Fix problems regarding the use of MSX 2's VRAM.
+- ~~Fix problems regarding the use of MSX 2's VRAM.~~
 - Block routines, like copy/move/delete text blocks.
 - Maybe a way of opening two files simultaneously.
 
