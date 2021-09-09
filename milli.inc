@@ -45,13 +45,13 @@ const
     Space       = 32;
     DELETE      = 127;
 
-    startvram   = $1400;
-    limitvram   = 65408;
-
-    maxlines    = 347;
+    maxlines    = 1568;
+    maxcols     = 80;
     maxwidth    = 78;
     maxlength   = 21;
-    maxcols     = $50;
+
+    startvram       = 5120;
+    limitvram       = 65280;
 
 type
     RStructure          = record
@@ -223,9 +223,9 @@ begin
     end;
 end;
 
-function IntegerDivision (a, b: real): integer;
+function Percentage (a, b: real): integer;
 begin
-    IntegerDivision := round(int((a - (a - (b * (a / b)))) / b));
+    Percentage := round(int((a*100)/b));
 end;
 
 (* Here we use MSX-DOS 2 to do the error handling. *)
@@ -266,8 +266,7 @@ begin
         end
         else
         begin
-            VRAMposition    :=  textlines[linenumber - 1].VRAMposition
-                                                            + maxcols;
+            VRAMposition    :=  textlines[linenumber - 1].VRAMposition + maxcols;
             VRAMBank        :=  textlines[linenumber - 1].VRAMBank;
         end;
 
@@ -387,27 +386,26 @@ end;
 
 procedure CommandLineVersion;
 begin
-    clrscr;
-    CommandLineBanner;
-    FastWriteln('Version 0.1 - Copyright (c) 2020, 2021 Brazilian MSX Crew.');
-    FastWriteln('Some rights reserved.');
-    writeln;
-    FastWriteln('This editor resembles the GNU nano editor, with the same');
-    FastWriteln('look and feel and most of the keystrokes.');
-    writeln;
-    FastWriteln('License GPLv3+: GNU GPL v. 3, so... This is free software,');
-    FastWriteln('so you are free to change and redistribute it. But there is');
-    FastWriteln('NO WARRANTY to the extent permitted by law.');
-    writeln;
-    FastWriteln('By the way, the name, ''milli'', may come from two places:');
-    FastWriteln('1 - A unit prefix in the metric system denoting a factor of');
-    FastWriteln('one thousandth.');
-    FastWriteln('2 - The restaurant at the end of the Universe, the Milliways');
-    FastWriteln('from the Hitchhiker''s Guide to the Galaxy book series.');
-    FastWriteln('Personally, I would prefer the last one. ');
-    FastWriteln('http://www.nano-editor.org http://gnu.org/licenses/gpl.html');
-    ClearAllBlinks;
-    halt;
+  clrscr;
+  CommandLineBanner;
+  FastWriteln('Version 0.2 - Copyright (c) 2020, 2021 Brazilian MSX Crew.');
+  FastWriteln('Some rights reserved (not many!).');
+  writeln;
+  FastWriteln('This editor resembles the GNU nano editor, with the same');
+  FastWriteln('look and feel and most part of the keystrokes.');
+  writeln;
+  FastWriteln('License GPLv3+: GNU GPL v. 3, so... This is free software,');
+  FastWriteln('so you are free to change and redistribute it. But there');
+  FastWriteln('is NO WARRANTY to the extent permitted by law.');
+  writeln;
+  FastWriteln('By the way, the name, ''milli'' came from two places:');
+  FastWriteln('1) Unit prefix in the metric system - factor of 1/1000.');
+  FastWriteln('2) The restaurant at the end of the Universe, the Milliways');
+  FastWriteln('from the Hitchhiker''s Guide to the Galaxy book series.');
+  FastWriteln('Personally, I would prefer the last one. ');
+  FastWriteln('http://www.nano-editor.org http://gnu.org/licenses/gpl.html');
+  ClearAllBlinks;
+  halt;
 end;
 
 procedure CommandLineHelp;

@@ -153,7 +153,7 @@ begin
     for i := 1 to aux do
     begin
         FillChar(temp, sizeof(temp), chr(32));
-        FromVRAMToRAM(temp, currentline - screenline + i);
+        FromVRAMToRAM(temp, currentline + i - 1);
         quick_display(1, i, temp);
     end;
 end;
@@ -172,7 +172,6 @@ end;
 procedure InitStructures;
 var
     counter:    real;
-
 begin
     counter    := startvram;
     
@@ -184,7 +183,6 @@ begin
         InitVRAM(i, counter); 
         counter := counter + maxcols;
     end;
-
 (*  Erase VRAM banks, from startvram till the end. *)
     StatusLine('Wiping memory, please be patient...');
 
@@ -230,7 +228,7 @@ begin
                                         maxlength + 1, chr(32));
 
     GotoXY(3, 1);
-    FastWrite('milli 0.1');
+    FastWrite('milli 0.2');
 
     Blink(2, 1, maxwidth);
     DisplayFileNameOnTop;
@@ -471,9 +469,6 @@ begin
 end;
 
 procedure ReadFile (AskForName: boolean);
-var
-    maxlinesnotreached: boolean;
-
 begin
     totalchar := 0;
 
@@ -510,27 +505,12 @@ begin
             totalchar := totalchar + length(line);
         end;
         emptylines[currentline] := false;
-        
-(*  Problema, gravidade alta: Se o arquivo for grande demais pro
-*   editor, ele tem que ler somente a parte que dá pra ler e parar.*)
- 
-{        
-        str(currentline - 1, tempnumber0);
-
-        if maxlinesnotreached then
-            temp := concat('File is too long. Read ', tempnumber0, ' lines. ')
-        else
-            temp := concat('Read ', tempnumber0, ' lines.');
-
-        StatusLine (temp);
-}
-
     end;
+
+    close(textfile);
 
     highestline := currentline - 1; currentline := 1; column := 1;
     screenline  := 1;               insertmode  := true;
-
-    close(textfile);
 
     DisplayFileNameOnTop;
 
@@ -1040,7 +1020,7 @@ begin
 
     str(currentline, tempnumber0);
     str(highestline, tempnumber1);
-    str(IntegerDivision(currentline * 100, highestline), tempnumber2);
+    str(Percentage(currentline, highestline), tempnumber2);
 
     if Types = Position then
         temp := concat('line ', tempnumber0,'/', tempnumber1, ' (', tempnumber2,'%),')
@@ -1061,10 +1041,7 @@ begin
 
         str(column, tempnumber0);
         str(j, tempnumber1);
-   
-        i := ((column * 100) div j);
-            
-        str(i , tempnumber2);
+        str(Percentage (column, j) , tempnumber2);
     
         temp := concat(temp, ' col ',tempnumber0,'/',tempnumber1, ' (', tempnumber2,'%)');
     end;
@@ -1084,9 +1061,9 @@ begin
     
 (*  Calculating percentage. *)
 
-    str(abovechar:6:0,   tempnumber0);
-    str(totalchar:6:0,   tempnumber1);
-    str(IntegerDivision (abovechar * 100, totalchar),   tempnumber2);
+    str(abovechar:5:0,   tempnumber0);
+    str(totalchar:5:0,   tempnumber1);
+    str(Percentage (abovechar, totalchar),   tempnumber2);
 
     if Types = Position then
         temp := concat(temp, ' char ', tempnumber0,'/', tempnumber1, ' (', tempnumber2,'%)')

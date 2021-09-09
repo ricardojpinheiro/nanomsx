@@ -11,11 +11,11 @@ Begin
         Expansion := $40 {Set the bit 6 (MXC) }
     Else
         Expansion := 0 ; {No expansion vram used}
-    AddrHi := VramAddr Div $4000;
+    AddrHi := Hi(VramAddr) Div $40;
     If VramBlockUsed = 1 Then
         AddrHi := AddrHi + 4 ;  {Set addr bit 16 in reg 14 = bit 2 }
-    AddrLo := VramAddr Mod 256;
-    AddrMid := (Vramaddr Div 256 ) And 63 ;
+    AddrLo := Lo(VramAddr);
+    AddrMid := Hi(Vramaddr) And 63;
     Inline(
             $F3/$3A/ Expansion /$D3/$99/$3E/$2D/$F6/$80/$D3/$99/$3A/ AddrHi /$D3/            $99/$3E/$0E/$F6/$80/$D3/$99/$3A/ AddrLo /$D3/$99/$3A/ AddrMid /$F6/            $00/$D3/$99/$ED/$5B/ RamAddr /$ED/$4B/ ByteCount /$DB/$98/$12/$13/$0B/            $79/$B0/$20/$F7/$3E/ 0 /$D3/$99/$3E/$2D/$F6/$80/$D3/$99
         );
