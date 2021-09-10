@@ -1,5 +1,6 @@
 0.2 - 2021-09-09
 - Limit increased to text files with 1568 lines and 80 columns - almost all the MSX 2 VRAM.
+- Some nasty bugs squashed.
 
 0.1 - 2021-09-04
 - First public release.
