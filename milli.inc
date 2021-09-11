@@ -89,6 +89,7 @@ function RPos(Character: char; Phrase: linestring): integer;
 var
     i: byte;
     Found: boolean;
+
 begin
     i := length(Phrase);
     Found := false;
@@ -110,9 +111,11 @@ function DifferentPos(Character: char; Phrase: linestring): byte;
 var
     i: byte;
     Found: boolean;
+
 begin
     i := 1;
     Found := false;
+
     repeat
         if Phrase[i] <> Character then
         begin
@@ -121,6 +124,7 @@ begin
         end;
         i := i + 1;
     until (Found) or (i >= length(Phrase));
+
     if Not Found then DifferentPos := 0;
 end;
 
@@ -135,6 +139,7 @@ var
 begin
     i := length(Phrase);
     Found := false;
+
     repeat
         if Phrase[i] <> Character then
         begin
@@ -143,6 +148,7 @@ begin
         end;
         i := i - 1;
     until Found or (i <= 1);
+
     if Not Found then RDifferentPos := 0;
 end;
 
@@ -150,14 +156,17 @@ end;
 
 function NPos(SearchPhrase, Phrase: linestring; Ntuple: byte): byte;
 var
-    HowManyPos, ResultPos, counter, LengthPhrase, LengthSearchPhrase: byte;
+    HowManyPos, ResultPos, counter, LengthPhrase, 
+    LengthSearchPhrase: byte;
     temp: linestring;
+
 begin
     LengthPhrase := length (Phrase);
     LengthSearchPhrase := length (SearchPhrase);
     counter := 1;
     ResultPos := 0;
     HowManyPos := 0;
+
     while (counter <= LengthPhrase) and (HowManyPos < Ntuple) do
     begin
         temp := copy(Phrase, counter, LengthSearchPhrase);
@@ -168,9 +177,9 @@ begin
         end;
         counter := counter + 1;
     end;    
+
     NPos := ResultPos;
 end;
-
 
 procedure CheatAPPEND (FileName: linestring);
 var
@@ -182,7 +191,6 @@ var
 begin
 
 (* Initializing some variables... *)
-
     fillchar(Path, sizeof(Path), ' ' );
     fillchar(Temporary, sizeof(Temporary), ' ' );
     APPEND[0] := 'A';   APPEND[1] := 'P';   APPEND[2] := 'P';
@@ -190,28 +198,23 @@ begin
     APPEND[6] := #0;
     
 (*  Sees if in the path there is a ':', used with drive letter. *)    
-    
     FirstTwoDotsFound := Pos (chr(58), FileName);
 
 (*  If there is a two dots...  *)
-    
     if FirstTwoDotsFound <> 0 then
     begin
     
 (*  Let me see where is the last backslash character...  *)
-
         LastBackSlashFound := RPos (chr(92), FileName);
         Path := copy (FileName, 1, LastBackSlashFound);
 
 (*  Copy the path to the variable. *)
-        
         for i := 1 to LastBackSlashFound - 1 do
             Temporary[i - 1] := Path[i];
         Temporary[LastBackSlashFound] := #0;
         Path := Temporary;
 
 (*  Sets the APPEND environment variable. *)
-        
         with Registers do
         begin
             B := sizeof (Path);
@@ -225,22 +228,10 @@ end;
 
 function Percentage (a, b: real): integer;
 begin
-    Percentage := round(int((a*100)/b));
-end;
-
-(* Here we use MSX-DOS 2 to do the error handling. *)
-
-function ErrorCode (ExitsOrNot: boolean): linestring;
-var
-    ErrorCodeNumber: byte;
-    ErrorMessage: TMSXDOSString;
-    
-begin
-    ErrorCodeNumber := GetLastErrorCode;
-    GetErrorMessage (ErrorCodeNumber, ErrorMessage);
-    ErrorCode := ErrorMessage;
-    if ExitsOrNot = true then
-        Exit;
+    if b <> 0 then
+        Percentage := round(int((a*100)/b))
+    else
+        Percentage := 0;
 end;
 
 procedure FromRAMToVRAM(var tempstr: linestring; linenumber: integer);
@@ -266,7 +257,8 @@ begin
         end
         else
         begin
-            VRAMposition    :=  textlines[linenumber - 1].VRAMposition + maxcols;
+            VRAMposition    :=  textlines[linenumber - 1].VRAMposition
+                                                            + maxcols;
             VRAMBank        :=  textlines[linenumber - 1].VRAMBank;
         end;
 
@@ -284,10 +276,12 @@ function SearchForBlankBlock(BlankLines: integer): integer;
 var
     i, k: integer;
     LastPosition: boolean;
+
 begin
     i := 0;
     k := 0;
     LastPosition := true;
+
     while (i <= maxlines) and (k < BlankLines) do
     begin
         i := i + 1;
@@ -296,6 +290,7 @@ begin
         else
             k := 0;
     end;
+
     SearchForBlankBlock := i - BlankLines;
 end;   
 
@@ -306,6 +301,7 @@ var
     i, NewBeginBlock: integer;
     
 begin
+
 (*  Move o bloco de texto, até o fim, BlankLines para baixo. *)
     i := (TotalLines + 1) - CurrentLine;
     Move(textlines[CurrentLine], textlines[CurrentLine + BlankLines],
@@ -345,20 +341,18 @@ var
     i, NewBeginBlock: integer;
     
 begin
-(*  Move o bloco de texto, até o fim, DeletedLines para cima. *)
 
+(*  Move o bloco de texto, até o fim, DeletedLines para cima. *)
     i := TotalLines - CurrentLine;
     Move(textlines[CurrentLine + DeletedLines], textlines[CurrentLine],
         sizeof(textlines[DeletedLines]) * i);
 
 (*  Libera as linhas novas no final, de forma que na busca por trechos
 *   em branco, elas sejam consideradas. *)
-
     for i := (TotalLines - DeletedLines) to TotalLines do 
         emptylines[i] := true;
 
 (*  Novo máximo, acrescido de BlankLines. *)
-
     TotalLines := TotalLines - DeletedLines;
 end;
 
@@ -382,21 +376,19 @@ begin
     FastWriteln(' "" "" ""  """"""""     """"      """"   """""""" ');
 end;
 
-(*  Command version.*)
-
 procedure CommandLineVersion;
 begin
   clrscr;
   CommandLineBanner;
-  FastWriteln('Version 0.2 - Copyright (c) 2020, 2021 Brazilian MSX Crew.');
+  FastWriteln('Version 0.3 - Copyright (c) 2020-2021 Brazilian MSX Crew.');
   FastWriteln('Some rights reserved (not many!).');
   writeln;
   FastWriteln('This editor resembles the GNU nano editor, with the same');
-  FastWriteln('look and feel and most part of the keystrokes.');
+  FastWriteln('look and feel and most of the keystrokes.');
   writeln;
-  FastWriteln('License GPLv3+: GNU GPL v. 3, so... This is free software,');
-  FastWriteln('so you are free to change and redistribute it. But there');
-  FastWriteln('is NO WARRANTY to the extent permitted by law.');
+  FastWriteln('License GPLv3+: Yeah, it''s free software, so you are free');
+  FastWriteln('to change and redistribute it. But there is NO WARRANTY to');
+  FastWriteln('extent permitted by law.');
   writeln;
   FastWriteln('By the way, the name, ''milli'' came from two places:');
   FastWriteln('1) Unit prefix in the metric system - factor of 1/1000.');
@@ -431,70 +423,3 @@ begin
     ClearAllBlinks;
     halt;
 end;
-
-{
-procedure locate;
-var
-    pointer, position, len          : integer;
-    c                               : char;
-
-begin
-    SetBlinkRate (5, 0);
-    temp := 'String to be located: ';
-    j := length (temp);
-    StatusWindowPtr := MakeWindow (1, 12, 79, 3, 'Search');
-    GotoWindowXY (StatusWindowPtr, 1, 1);
-    WriteWindow(StatusWindowPtr, temp);
-    GotoWindowXY (StatusWindowPtr, j + 1, 1);
-    temp := '';
-    readln(temp);
-
-    if temp <> '' then
-        searchstring := temp;
-    len := length (searchstring);
-
-    if len = 0 then
-    begin
-        BeginFile;
-        exit;
-    end;
-
-    temp := 'Searching... ';
-    j := length (temp);
-    GotoXY (1, maxlength + 2);
-    ClrEol;
-    Write(temp);
-
-    StatusWindowPtr := MakeWindow (1, 2, 79, 22, 'Located strings:');
-    GotoWindowXY (StatusWindowPtr, 1, 1);
-
-    for i := 1 to highestline do
-    begin
-    (* look for matches on this line *)
-        pointer := pos (searchstring, linebuffer [i]^);
-
-   (* if there was a match then get ready to print it *)
-        if (pointer > 0) then
-        begin
-            temp := linebuffer [i]^;
-            position := pointer;
-            WritelnWindow(StatusWindowPtr, copy(temp, 1, 79));
-
-        (* print all of the matches on this line *)
-            while pointer > 0 do
-            begin
-                temp := copy (temp, pointer + len + 1, 128);
-                pointer := pos (searchstring, temp);
-                position := position + pointer + len;
-            end;
-
-        (* go to next line and keep searching *)
-        end;
-    end;
-
-    WritelnWindow(StatusWindowPtr, 'End of locate.  Press any key to exit...');
-    c := readkey;
-    ClrWindow(StatusWindowPtr);
-    BeginFile;
-end;
-}

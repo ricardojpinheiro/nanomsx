@@ -21,19 +21,17 @@ program milli;
 var
     currentline, highestline:       integer; 
     key, screenline, column:        byte;
-    line, emptyline:                linestring;
-{
-    linebuffer:                     array [1.. maxlines] of lineptr;
-}
     tabset:                         array [1..maxwidth] of boolean;
     textfile:                       text;
-    filename, searchstring,
-    replacestring:                  linestring;
+    filename:                       TFileName;
+    searchstring, replacestring:    string[40];
+    line:                           linestring;
     savedfile, insertmode,
     iscommand:                      boolean;
-    tempnumber0:                    string[6];
+    tempnumber0, tempnumber1,
+    tempnumber2:                    string[6];
     i, j, tabnumber, newline,
-    newcolumn, returncode:          integer;
+    newcolumn, returncode, aux:     integer;
     c:                              char;
 
     Registers:                      TRegs;
@@ -76,6 +74,7 @@ end;
 procedure StatusLine (message: linestring);
 var
     lengthmessage, position: byte;
+    
 begin
     ClearStatusLine;
 
@@ -140,9 +139,6 @@ begin
 end;
 
 procedure DrawScreen (currentline, screenline: integer; j: byte);
-var
-    line:   linestring;
-    aux:    integer;
 begin
     if highestline <= (maxlength - j) then
         aux := highestline
@@ -153,9 +149,9 @@ begin
 
     for i := 1 to aux do
     begin
-        FillChar(line, sizeof(line), chr(32));
-        FromVRAMToRAM(line, currentline - screenline + i);
-        quick_display(1, i, line);
+        FillChar(temp, sizeof(temp), chr(32));
+        FromVRAMToRAM(temp, currentline - screenline + i);
+        quick_display(1, i, temp);
     end;
 end;
 
@@ -211,7 +207,6 @@ begin
     column      := 1; insertmode  := false;    savedfile   := false;   
     FillChar(filename,      sizeof(filename),       chr(32));
     FillChar(temp,          sizeof(temp),           chr(32));
-    FillChar(emptyline,     sizeof(emptyline),      chr(32));
     FillChar(filename,      sizeof(filename),       chr(32));
     FillChar(searchstring,  sizeof(searchstring),   chr(32));
     FillChar(replacestring, sizeof(replacestring),  chr(32));
@@ -224,11 +219,11 @@ end;
 
 procedure InitMainScreen;
 begin
-    EditWindowPtr := MakeWindow(0,  1,  maxwidth  + 2, 
-                                        maxlength + 1, chr(32));
+    EditWindowPtr := MakeWindow(0,  1,  maxwidth  + 2, maxlength + 1, 
+                                                            chr(32));
 
     GotoXY(3, 1);
-    FastWrite('milli 0.2');
+    FastWrite('milli 0.3');
 
     Blink(2, 1, maxwidth);
     DrawScreen(currentline, screenline, 1);
@@ -296,6 +291,8 @@ begin
     screenline  := 1;
     column      := 1;
     DrawScreen(currentline, screenline, 1);
+    screenline  := maxlength - 1;
+    GotoWindowXY(EditWindowPtr, column, screenline);
 end;
 
 procedure BeginLine;
@@ -371,8 +368,6 @@ begin
 end;
 
 procedure deleteline;
-var
-    aux: integer;
 begin
     aux := currentline + (maxlength - screenline);
     FillChar(line, sizeof(line), chr(32));
@@ -568,19 +563,28 @@ begin
     
     filename := tempfilename;
     
+    temp := 'Saving file... Line     ';
+    StatusLine(temp);
+    
     for i := 1 to highestline do
     begin
         FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, i);
         writeln(textfile, line);
+        if (i mod tabnumber = 0) then
+        begin
+            str(i,  tempnumber0);
+            GotoXY(47,  maxlength + 1);
+            FastWrite(tempnumber0);
+        end;
     end;
 
     close(textfile);
     savedfile := true;
     
-    ClearBlink(1, maxlength + 1, maxwidth + 2);
-    str(highestline + 1, tempnumber0);
-    temp := concat('Wrote ', tempnumber0, ' lines ');
+    ClearBlink(1,   maxlength + 1, maxwidth + 2);
+    str(highestline + 1,    tempnumber0);
+    temp := concat('Wrote ',    tempnumber0, ' lines ');
     StatusLine(temp);
 end;
 
@@ -715,10 +719,10 @@ begin
     FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
     
-    if (line <> emptyline) then
-        line := emptyline;
+    if (length(line) <> 0) then
+        FillChar(line, sizeof(line), chr(32));
 
-    line := emptyline;
+    FillChar(line, sizeof(line), chr(32));
     FromRAMToVRAM(line, currentline);
     CursorOn;
 end;
@@ -1032,7 +1036,6 @@ procedure Location (Types: LocationOptions);
 type
     ASCII = set of 0..255;
 var
-    tempnumber1, tempnumber2: string[6];
     totalwords              : integer;
     abovechar, totalchar, 
     percentchar             : real;
@@ -1043,11 +1046,9 @@ begin
     FillChar(temp, sizeof(temp), chr(32));
 
 (*  Line count - Calculating percentage. *)    
-
     str(currentline, tempnumber0);
     str(highestline, tempnumber1);
-    j := ((currentline * 100) div highestline);
-    str(j, tempnumber2);
+    str(Percentage (currentline, highestline), tempnumber2);
     
     if Types = Position then
         temp := concat('line ', tempnumber0,'/', tempnumber1, ' (', tempnumber2,'%),')
@@ -1060,21 +1061,17 @@ begin
         FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, currentline);
 
-        j := length(line) + 1;
+        j := length(line);
 
 (*  Calculating percentage. *)        
-
         str(column, tempnumber0);
         str(j, tempnumber1);
-   
-        i := ((column * 100) div j);
-        str(i , tempnumber2);
+        str(Percentage(column, j) , tempnumber2);
     
         temp := concat(temp, ' col ',tempnumber0,'/',tempnumber1, ' (', tempnumber2,'%)');
     end;
 
 (*  Char count. *)
-
     abovechar := 0;
     
     for i := 1 to currentline - 1 do
@@ -1087,24 +1084,19 @@ begin
         totalchar := totalchar + length(line);
     
 (*  Calculating percentage. *)
-
-    percentchar := round(int(((abovechar * 100) / totalchar)));
-
-    str(abovechar:6:0   ,   tempnumber0);
-    str(totalchar:6:0   ,   tempnumber1);
-    str(percentchar:6:0 ,   tempnumber2);
+    str(abovechar:6:0                   ,   tempnumber0);
+    str(totalchar:6:0                   ,   tempnumber1);
+    str(Percentage(abovechar, totalchar),   tempnumber2);
     
     delete(tempnumber0  , 1, RPos(' ', tempnumber0) - 1);
     delete(tempnumber1  , 1, RPos(' ', tempnumber1) - 1);
-    delete(tempnumber2  , 1, RPos(' ', tempnumber2) - 1);
-    
+
     if Types = Position then
         temp := concat(temp, ' char ', tempnumber0,'/', tempnumber1, ' (', tempnumber2,'%)')
     else
         temp := concat(temp, ' Chars: ', tempnumber1);
 
 (*  Word count *)
-
     if Types = HowMany then
     begin
         totalwords  := 0;
@@ -1343,6 +1335,8 @@ begin
 
     for i := 1 to maxwidth do
         tabset[i] := (i mod tabnumber) = 1;
+
+    ins;
 
 (* main loop - get a key and process it *)
     repeat
