@@ -252,13 +252,13 @@ begin
     begin
         GotoWindowXY(EditWindowPtr, column, screenline);
         WriteWindow(EditWindowPtr, inkey);
-{
-        if line = emptyline then
+
+        if length(line) = 0 then
         begin
             InsertLinesIntoText (currentline - 1, highestline, 1);
             FillChar(line, sizeof(line), chr(32));
         end;
-}
+
         while length(line) <= column do
             line := line + ' ';
 
@@ -275,7 +275,7 @@ begin
 
 (* A little delay when you are close to the end of a line *)
 
-        if column >= 78 then
+        if column >= maxwidth then
             delay(10);
     end;
     FromRAMToVRAM(line, currentline);    
@@ -320,6 +320,7 @@ begin
         exit;
 
     currentline := currentline - 1;
+    
     if screenline = 1 then
     begin
         GotoWindowXY(EditWindowPtr, 1, 1);
@@ -357,6 +358,7 @@ begin
     GotoWindowXY(EditWindowPtr, column, screenline + 1);
     InsLineWindow(EditWindowPtr);
     InsertLinesIntoText (currentline - 1, highestline, 1);
+    highestline := highestline - 1;
 end;
 
 procedure Return;
@@ -441,8 +443,8 @@ begin
         exit;
     end;
 
-    if line = emptyline then
-        line := '';
+    if length(line) = 0 then
+        FillChar(line, sizeof(line), chr(32));
 
     while length(line) < column do
         line := line + ' ';
@@ -505,7 +507,7 @@ begin
     begin
         currentline := 1;
 
-        while not eof(textfile) do
+        while not eof(textfile) and (currentline <= maxlines) do
         begin
             FillChar(line, sizeof(line), chr(32));
             readln(textfile, line);
@@ -530,7 +532,7 @@ begin
 
     close(textfile);
 
-    highestline := currentline - 1; currentline := 1; column := 1;
+    highestline := currentline - 1; currentline := 1;   column := 1;
     screenline  := 1;               insertmode  := true;
 
     DisplayFileNameOnTop;
@@ -1257,10 +1259,9 @@ end;
 
 (* main *)
 begin
-
-(*  If the program are being executed on a MSX 1, exits. *)
     newline     := 1;   newcolumn   := 1;   tabnumber   := 8;
 
+(*  If the program are being executed on a MSX 1, exits. *)
     if msx_version <= 1 then
     begin
         writeln('This program needs MSX 2 and above.');
@@ -1333,7 +1334,11 @@ begin
             end;
         end
         else
+        begin
             InitStructures;
+            currentline := 1;   highestline := 1;
+            StatusLine('New file');
+        end;
     end;
 
     for i := 1 to maxwidth do
