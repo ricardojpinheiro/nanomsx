@@ -333,7 +333,7 @@ end;
 
 procedure CursorDown;
 begin
-    if currentline >= highestline then
+    if currentline > highestline then
         exit;
 
     currentline :=  currentline + 1;
@@ -460,15 +460,18 @@ begin
         del;
     end
     else
-    begin
-        deleteline;
-        CursorUp;
-        EndLine;
-        FillChar(line, sizeof(line), chr(32));
-        FromVRAMToRAM(line, currentline + ((maxlength - 1) - screenline));
-        if highestline > (currentline + ((maxlength - 1) - screenline)) then
-            quick_display(1, maxlength - 1, line);    
-    end;
+        if currentline > 1 then
+        begin
+            deleteline;
+            CursorUp;
+{           
+            EndLine;
+            FillChar(line, sizeof(line), chr(32));
+            FromVRAMToRAM(line, currentline + ((maxlength - 1) - screenline));
+            if highestline > (currentline + ((maxlength - 1) - screenline)) then
+                quick_display(1, maxlength - 1, line);    
+}
+        end;
 end;
 
 procedure ReadFile (AskForName: boolean);
@@ -514,7 +517,6 @@ begin
         
 (*  Problema, gravidade alta: Se o arquivo for grande demais pro
 *   editor, ele tem que ler somente a parte que dá pra ler e parar.*)
-        
         str(currentline - 1, tempnumber0);
 
         if maxlinesnotreached then
@@ -1063,6 +1065,9 @@ begin
 
         j := length(line);
 
+        if j = 0 then
+            j := 1;
+
 (*  Calculating percentage. *)        
         str(column, tempnumber0);
         str(j, tempnumber1);
@@ -1082,6 +1087,9 @@ begin
     
     for i := currentline to highestline do
         totalchar := totalchar + length(line);
+
+    if totalchar = 0 then
+        totalchar := 1;
     
 (*  Calculating percentage. *)
     str(abovechar:6:0                   ,   tempnumber0);
