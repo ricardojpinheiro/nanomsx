@@ -1,4 +1,4 @@
-(* milli
+(* milli.pas
  * This wannabe GNU nano-like text editor is based on Qed-Pascal
  * (http://bit.ly/qedpascal). Our main approach is to have all GNU nano
  * funcionalities. MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.
@@ -223,7 +223,7 @@ begin
                                                             chr(32));
 
     GotoXY(3, 1);
-    FastWrite('milli 0.3');
+    FastWrite('milli 0.4');
 
     Blink(2, 1, maxwidth);
     DrawScreen(currentline, screenline, 1);
@@ -462,15 +462,25 @@ begin
     else
         if currentline > 1 then
         begin
+            FillChar(temp, sizeof(temp), chr(32));
+            FromVRAMToRAM(temp, currentline); 
+
             deleteline;
             CursorUp;
-{           
             EndLine;
+
+            FillChar(line, sizeof(line), chr(32));
+            FromVRAMToRAM(line, currentline);
+            line := concat(line, temp);
+            
+            quick_display(1, screenline, line);
+
+            FromRAMToVRAM(line, currentline);
+            
             FillChar(line, sizeof(line), chr(32));
             FromVRAMToRAM(line, currentline + ((maxlength - 1) - screenline));
             if highestline > (currentline + ((maxlength - 1) - screenline)) then
                 quick_display(1, maxlength - 1, line);    
-}
         end;
 end;
 
@@ -1352,6 +1362,7 @@ begin
         CursorOn;
         GetKey (key, iscommand);
         CursorOff;
+        ClearStatusLine;
         if iscommand then
             handlefunc(key)
         else
