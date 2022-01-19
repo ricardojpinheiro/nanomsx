@@ -1,8 +1,6 @@
-(* milli.pas
- * This wannabe GNU nano-like text editor is based on Qed-Pascal
+(* milli.pas - This wannabe GNU nano-like text editor is based on Qed-Pascal
  * (http://bit.ly/qedpascal). Our main approach is to have all GNU nano
- * funcionalities. MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.
- *)
+ * funcionalities. MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.  *)
 
 program milli;
 
@@ -31,9 +29,11 @@ var
     tempnumber0, tempnumber1,
     tempnumber2:                    string[6];
     i, j, tabnumber, newline,
-    newcolumn, returncode, aux:     integer;
+    newcolumn, rtcode, aux:         integer;
     c:                              char;
 
+    BlockStart, BlockEnd, 
+    BlockDest:                      integer;
     Registers:                      TRegs;
     ScreenStatus:                   TScreenStatus;
    
@@ -54,7 +54,6 @@ procedure GetKey (var key: byte; var iscommand: boolean);
 var
     inkey: char;
 (* Return true if a key waiting, and the key. *)
-    
 begin
     iscommand   := false;
     inkey       := readkey;
@@ -105,31 +104,39 @@ begin
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 9;
                         BlinkSequence[3] := 22; BlinkSequence[4] := 34;
                         BlinkSequence[5] := 43; BlinkSequence[6] := 55;
-                        Line1 := '^G Help ^O Write Out ^W Where Is ^K CUT   ^C Location ~C Line count';
-                        Line2 := '^Z Exit ^P Read File ^N Replace  ^U PASTE ^J Align    ^T Go To Line';
+                        Line1 := concat('^G Help ^O Write Out ^W Where Is ', 
+                        '~B MarkB ^C Location ~C Line count');
+                        Line2 := concat('^Z Exit ^P Read File ^N Replace  ',
+                        '~E MarkE ^J Align    ^T Go To Line');
                     end;
         search:     begin
                         BlinkLength := 2;
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 11;
                         BlinkSequence[3] := 28; BlinkSequence[4] := 41;
-                        Line1 := '^G Help   ~W Next forward  ^Q Backwards ^T Go To Line              ';
-                        Line2 := '^C Cancel ~Q Bext backward ^N Replace   ^X Exit                    ';
+                        Line1 := concat('^G Help   ~W Next forward  ',
+                                '^Q Backwards ^T Go To Line              ');
+                        Line2 := concat('^C Cancel ~Q Bext backward ',
+                                '^N Replace   ^X Exit                    ');
                     end;
         replace:    begin
                         BlinkLength := 2;
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 15;
-                        Line1 := ' Y Yes         A All                                               ';
-                        Line2 := ' N No         ^C Cancel                                            ';
+                        FillChar(Line1, sizeof(Line1), chr(32));
+                        FillChar(Line2, sizeof(Line2), chr(32));
+                        Line1 := ' Y Yes         A All';
+                        Line2 := ' N No         ^C Cancel';
                     end;
         align:      begin
                         BlinkLength := 2;
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 15;
-                        Line1 := ' L Left        C Center                                            ';
-                        Line2 := ' R Right       J Justify                                           ';
+                        FillChar(Line1, sizeof(Line1), chr(32));
+                        FillChar(Line2, sizeof(Line2), chr(32));
+                        Line1 := ' L Left        C Center';
+                        Line2 := ' R Right       J Justify';
                     end;
     end;
-    WriteVRAM(0, (maxwidth + 2) * (maxlength + 1), Addr(Line1[1]), length(Line1));
-    WriteVRAM(0, (maxwidth + 2) * (maxlength + 2), Addr(Line2[1]), length(Line2));
+    WriteVRAM(0, (maxwidth + 2)*(maxlength + 1), Addr(Line1[1]), length(Line1));
+    WriteVRAM(0, (maxwidth + 2)*(maxlength + 2), Addr(Line2[1]), length(Line2));
 
     for i := 1 to sizeof(BlinkSequence) do
     begin
@@ -172,9 +179,8 @@ var
 
 begin
     counter    := startvram;
-    
-(*  Initialize structure. *)
 
+(*  Initialize structure. *)
     StatusLine('Initializing structures...');
     for i := 1 to maxlines do
     begin
@@ -223,7 +229,7 @@ begin
                                                             chr(32));
 
     GotoXY(3, 1);
-    FastWrite('milli 0.4');
+    FastWrite('milli 0.5');
 
     Blink(2, 1, maxwidth);
     DrawScreen(currentline, screenline, 1);
@@ -264,12 +270,10 @@ begin
             delete(line, column, 1);
 
 (* redraw current line if in insert mode *)
-
         if insertmode then
             quick_display(1, screenline, line);
 
 (* A little delay when you are close to the end of a line *)
-
         if column >= maxwidth then
             delay(10);
     end;
@@ -481,7 +485,7 @@ begin
             FromVRAMToRAM(line, currentline + ((maxlength - 1) - screenline));
             if highestline > (currentline + ((maxlength - 1) - screenline)) then
                 quick_display(1, maxlength - 1, line);    
-        end;
+        end
 end;
 
 procedure ReadFile (AskForName: boolean);
@@ -653,7 +657,6 @@ begin
     FromVRAMToRAM(line, currentline);
 
 (* if i am in a word then skip to the space *)
-
     while (not ((line[column] = ' ') or
                (column >= length(line) ))) and
          ((currentline <> 1) or
@@ -661,7 +664,6 @@ begin
       CursorLeft;
 
 (* find end of previous word *)
-
    while ((line[column] = ' ') or
           (column >= length(line) )) and
          ((currentline <> 1) or
@@ -669,7 +671,6 @@ begin
       CursorLeft;
 
 (* find start of previous word *)
-
    while (not ((line[column] = ' ') or
                (column >= length(line) ))) and
          ((currentline <> 1) or
@@ -685,14 +686,12 @@ begin
     FromVRAMToRAM(line, currentline);
 
 (* if i am in a word, then move to the whitespace *)
-
    while (not ((line[column] = ' ') or
                (column >= length(line)))) and
          (currentline < highestline) do
       CursorRight;
 
 (* skip over the space to the other word *)
-
    while ((line[column] = ' ') or
           (column >= length(line))) and
          (currentline < highestline) do
@@ -786,10 +785,10 @@ begin
         FillChar(line, sizeof(line), chr(32));
         FromVRAMToRAM(line, i);        
     
-    (* look for matches on this line *)
+(* look for matches on this line *)
         pointer := pos (searchstring, line);
 
-    (* if there was a match then get ready to print it *)
+(* if there was a match then get ready to print it *)
         if (pointer > 0) then
         begin
             currentline := i;
@@ -800,7 +799,7 @@ begin
             column := pointer;
             DrawScreen(currentline, screenline, 1);
             
-    (* Redraw the StatusLine, bottom of the window and display keys *)
+(* Redraw the StatusLine, bottom of the window and display keys *)
             ClearStatusLine;
             DisplayKeys (main);
             exit;
@@ -906,7 +905,6 @@ begin
                                 end;
                                 
 (* a, A, y, Y *)
-                                
             65, 97, 89, 121:    begin
                                     line := concat(copy (line, 1, 
                                     position - 1), replacestring, 
@@ -1025,9 +1023,8 @@ begin
     FromRAMToVRAM(line, currentline);
     DrawScreen(currentline, screenline, 1);
 
-(*  Problema, gravidade baixa: O ideal é que ele só redesenhe a linha,
-*   e não a página toda. Mas no momento, não está funcionando.
-*   A ser resolvido depois. *)
+(*  Problema, gravidade baixa: O ideal é que ele só redesenhe a linha, e não a
+*   página toda. Mas no momento, não está funcionando. A ser resolvido depois.*)
 {
     quick_display(1, currentline, line);
 
@@ -1063,9 +1060,10 @@ begin
     str(Percentage (currentline, highestline), tempnumber2);
     
     if Types = Position then
-        temp := concat('line ', tempnumber0,'/', tempnumber1, ' (', tempnumber2,'%),')
+        temp := concat( 'line ', tempnumber0,'/', tempnumber1,
+                        ' (', tempnumber2,'%),')
     else
-        temp := concat(' Lines: ', tempnumber1);
+        temp := concat( ' Lines: ', tempnumber1);
 
     if Types = Position then
     begin
@@ -1083,7 +1081,8 @@ begin
         str(j, tempnumber1);
         str(Percentage(column, j) , tempnumber2);
     
-        temp := concat(temp, ' col ',tempnumber0,'/',tempnumber1, ' (', tempnumber2,'%)');
+        temp := concat( temp, ' col ',tempnumber0,'/',tempnumber1,
+                        ' (', tempnumber2,'%)');
     end;
 
 (*  Char count. *)
@@ -1110,9 +1109,10 @@ begin
     delete(tempnumber1  , 1, RPos(' ', tempnumber1) - 1);
 
     if Types = Position then
-        temp := concat(temp, ' char ', tempnumber0,'/', tempnumber1, ' (', tempnumber2,'%)')
+        temp := concat( temp, ' char ', tempnumber0,'/', tempnumber1,
+                        ' (', tempnumber2,'%)')
     else
-        temp := concat(temp, ' Chars: ', tempnumber1);
+        temp := concat( temp, ' Chars: ', tempnumber1);
 
 (*  Word count *)
     if Types = HowMany then
@@ -1129,7 +1129,8 @@ begin
             FillChar(temp2, sizeof(temp2), chr(32));
             FromVRAMToRAM(temp2, i);
             for j   := 1 to length(temp2) do
-                if (temp2[j] = chr(32)) and (ord(temp2[j + 1]) in Print) and (j > 1) then
+                if (temp2[j] = chr(32)) and (ord(temp2[j + 1]) in Print)
+                    and (j > 1) then
                     TotalWords := TotalWords + 1;
         end;
         
@@ -1171,8 +1172,8 @@ begin
     
     if destcolumn > i then
         destcolumn := i;
+
 (*  Here, if destline is in the last page... *)
-    
     if destline >= (highestline - maxlength) then
         i := 2
     else
@@ -1185,7 +1186,6 @@ begin
     DrawScreen(currentline, screenline, i);
   
 (* Redraw the StatusLine, bottom of the window and display keys *)
-
     ClearStatusLine;
 end;
 
@@ -1202,17 +1202,95 @@ begin
     WritelnWindow(EditWindowPtr, 'TAB - Indent marked region         | SELECT+TAB - Unindent marked region');
     WritelnWindow(EditWindowPtr, 'Cursor right - Character forward   | Cursor up   - One line up');
     WritelnWindow(EditWindowPtr, 'Cursor left  - Character backward  | Cursor down - One line down');
-    WritelnWindow(EditWindowPtr, 'HOME - To start of file            | CLS - To end of file');
+    WritelnWindow(EditWindowPtr, 'HOME - Jump to beginning of file   | CLS - Jump to end of file');
     WritelnWindow(EditWindowPtr, 'Ctrl+J - Align line (F4)           | Ctrl+W - Start forward search (F6)');
     WritelnWindow(EditWindowPtr, 'Ctrl+N - Start a replacing session | Ctrl+Q - Start backward search (F8)');
     WritelnWindow(EditWindowPtr, 'BS - Delete character before cursor| SELECT+W - Next occurrence forward');
     WritelnWindow(EditWindowPtr, 'DEL - Delete character under cursor| SELECT+Q - Next occurrence backward');
     WritelnWindow(EditWindowPtr, 'SELECT+DEL - Delete current line   | SELECT+Y - Remove current line');
     WritelnWindow(EditWindowPtr, 'Ctrl+T - Go to specified line (F7) | SELECT+D - Report line/word/char count');
-    repeat until keypressed;
+    WritelnWindow(EditWindowPtr, 'SELECT+B - Mark beginning of block | SELECT+E - Mark end of the block');
+    WritelnWindow(EditWindowPtr, 'SELECT+C - Copy block to line      | SELECT+V - Move block to line');
+    WritelnWindow(EditWindowPtr, 'SELECT+F - Delete block');    
+    c := readkey;
     DrawScreen(currentline, screenline, 1);
 end;
 
+procedure BlockMark (TypeOfMarks: BlockMarkings; var BlockLine: integer);
+begin
+    SetBlinkRate (5, 0);
+    GotoXY(1, maxlength + 1);
+    ClrEol;
+    Blink(1, maxlength + 1, maxwidth + 2);
+
+    BlockLine := currentline;
+
+    str(BlockLine, tempnumber0);
+
+    if TypeOfMarks = BlockBegin then
+        temp := 'First block line: '
+    else
+        temp := 'Last block line: ';
+
+    temp := concat (temp, tempnumber0);
+
+    StatusLine (temp);
+    c := readkey;
+    ClearStatusLine;
+end;
+
+procedure BlockOperations (KindOf: byte; StartBlock, EndBlock, DestBlock: integer);
+(*
+*   0   - Copia bloco. 
+*   1   - Move bloco.
+*   2   - Apaga bloco. 
+*)
+
+begin
+    str (StartBlock , tempnumber0);
+    str (EndBlock   , tempnumber1);
+    str (DestBlock  , tempnumber2);
+
+    case KindOf of
+        0: searchstring := 'copied';
+        1: searchstring := 'moved';
+    end;
+
+    if KindOf = 2 then
+        temp := concat( 'Block from ', tempnumber0, ' to ', tempnumber1, 
+                        ' will be deleted.')
+    else
+        temp := concat( 'Block from ', tempnumber0, ' to ', tempnumber1, 
+                        ' will be ', searchstring, ' to ', tempnumber2, '.');
+    
+    StatusLine(temp);
+    c := readkey;
+
+    if KindOf = 2 then
+        DeleteLinesFromText(StartBlock, highestline, (EndBlock - StartBlock))
+    else
+    begin
+        InsertLinesIntoText (DestBlock - 1, highestline, (EndBlock - StartBlock) + 1);
+        CopyBlock(StartBlock, EndBlock, DestBlock);
+    end;
+    
+    if KindOf = 1 then
+        DeleteLinesFromText(StartBlock, highestline, (EndBlock - StartBlock) + 1);
+
+    if KindOf < 2 then
+    begin
+        StartBlock  := DestBlock;
+        EndBlock    := DestBlock + (StartBlock - EndBlock);
+    end
+    else
+    begin
+        StartBlock  := -1;
+        EndBlock    := -1;
+    end;
+
+    DrawScreen(currentline, screenline, 1);
+    ClearStatusLine;
+end;
 
 procedure handlefunc(keynum: byte);
 var
@@ -1246,7 +1324,6 @@ begin
         CONTROLS:   WriteOut(false);
         CONTROLQ:   WhereIs (backwardsearch, false);
         CONTROLT:   GoToLine;
-(*        CONTROLU    : Colar conteúdo do buffer. Vai demorar... *)
         CONTROLV:   PageDown;
         CONTROLW:   WhereIs (forwardsearch,  false);
         CONTROLY:   PageUp;
@@ -1254,13 +1331,18 @@ begin
         SELECT:     begin
                         key := ord(readkey);
                         case key of
-                            DELETE:     deleteline;
-                            TAB:        backtab;
-                            68, 100:    Location  (HowMany);              (* D *)
-                            81, 113:    WhereIs   (backwardsearch, true); (* Q *)
-                            87, 119:    WhereIs   (forwardsearch , true); (* W *)
-                            89, 121:    RemoveLine;                       (* Y *)
-                            else    delay(10);
+                           DELETE:  deleteline;
+                           TAB:     backtab;
+(* B *)                    66, 98:  BlockMark       (BlockBegin, BlockStart);
+(* C *)                    67, 99:  BlockOperations (0, BlockStart, BlockEnd, currentline);
+(* D *)                    68, 100: Location        (HowMany);
+(* E *)                    69, 101: BlockMark       (BlockFinish, BlockEnd);           
+(* F *)                    70, 102: BlockOperations (2, BlockStart, BlockEnd, currentline);
+(* Q *)                    81, 113: WhereIs         (backwardsearch, true);
+(* V *)                    86, 118: BlockOperations (1, BlockStart, BlockEnd, currentline);
+(* W *)                    87, 119: WhereIs         (forwardsearch , true);
+(* Y *)                    89, 121: RemoveLine;
+                           else    delay(10);
                         end;
                     end;
         else    delay(10);
@@ -1271,84 +1353,82 @@ end;
 begin
     newline     := 1;   newcolumn   := 1;   tabnumber   := 8;
 
-(*  If the program are being executed on a MSX 1, exits. *)
-    if msx_version <= 1 then
-    begin
-        writeln('This program needs MSX 2 and above.');
-        halt;
+(*  If it's a MSX 1, exits. If it's a Turbo-R, turns on R800 mode.*)
+    case msx_version of
+        1:  begin
+                writeln('MSX 1 detected. This program needs at least a MSX 2.');
+                halt;
+            end;
+        2:  writeln('MSX 2 detected.');
+        3:  writeln('MSX 2+ detected.');
+        4:  begin
+                writeln('MSX Turbo-R detected.');
+                TRR800mode;
+            end;
     end;
 
-(*  If the program are being executed on a MSX with MSX-DOS 1, exits. *)
     GetMSXDOSVersion (MSXDOSversion);
 
-    if (MSXDOSversion.nKernelMajor < 2) then
-    begin
-        writeln('This program needs MSX-DOS 2 and above.');
-        halt;
-    end
-    else
-    begin
-
 (*  Init text editor routines and variables. *)    
-        InitTextEditor;
-        InitMainScreen;
+    InitTextEditor;
+    InitMainScreen;
         
-        if paramcount > 0 then
-        begin
+    if paramcount > 0 then
+    begin
 
 (*  Read parameters, and upcase them. *)
-            for i := 1 to paramcount do
-            begin
-                temp := paramstr(i);
-                for j := 1 to length(temp) do
-                    temp[j] := upcase(temp[j]);
+        for i := 1 to paramcount do
+        begin
+            temp := paramstr(i);
+            for j := 1 to length(temp) do
+                temp[j] := upcase(temp[j]);
 
-                c := temp[2];
-                if temp[1] = '/' then
-                begin
-                    delete(temp, 1, 2);
+            c := temp[2];
+            if temp[1] = '/' then
+            begin
+                delete(temp, 1, 2);
 
 (*  Parameters. *)
-                    case c of
-                        'H': CommandLineHelp;
-                        'V': CommandLineVersion;
-                        'L': val(copy(temp, 1, length(temp)), newline,      returncode);
-                        'C': val(copy(temp, 1, length(temp)), newcolumn,    returncode);
-                        'T': val(copy(temp, 1, length(temp)), tabnumber,    returncode);
-                    end;
+                case c of
+                    'H': CommandLineHelp;
+                    'V': CommandLineVersion;
+                    'L': val(copy(temp, 1, length(temp)), newline,   rtcode);
+                    'C': val(copy(temp, 1, length(temp)), newcolumn, rtcode);
+                    'T': val(copy(temp, 1, length(temp)), tabnumber, rtcode);
                 end;
             end;
+        end;
 
 (* The first parameter should be the file. *)
-            filename    := paramstr(1);
+        filename    := paramstr(1);
         
 (* Cheats the APPEND environment variable. *)    
+        if (MSXDOSversion.nKernelMajor >= 2) then
             CheatAPPEND(filename);
         
 (* Reads file from the disk. *)
-            ReadFile(false);
+        ReadFile(false);
 
-            if newcolumn <> column then
-                column  := newcolumn;
-        
-            if newline <> currentline then
-            begin
-                currentline := newline;
-                if newline >= (maxlength - 1) then
-                begin
-                    screenline  := maxlength - 1;
-                    DrawScreen(currentline, screenline, 1);
-                end
-                else
-                    screenline := newline;
-            end;
-        end
-        else
+        if newcolumn <> column then
+            column  := newcolumn;
+    
+        if newline <> currentline then
         begin
-            InitStructures;
-            currentline := 1;   highestline := 1;
-            StatusLine('New file');
+            currentline := newline;
+            if newline >= (maxlength - 1) then
+            begin
+                screenline  := maxlength - 1;
+                DrawScreen(currentline, screenline, 1);
+            end
+            else
+                screenline := newline;
         end;
+    end
+    else
+    begin
+        InitStructures;
+        currentline := 1;   highestline := 1;
+        StatusLine('New file');
     end;
 
     for i := 1 to maxwidth do
@@ -1368,7 +1448,10 @@ begin
         else
             character(chr(key));
     until true = false;
-    
-    CheatAPPEND(chr(32));
+
+    if (MSXDOSversion.nKernelMajor >= 2) then
+        CheatAPPEND(chr(32));
+
     ClearAllBlinks;
+    TRZ80mode;
 end.

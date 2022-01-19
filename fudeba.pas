@@ -5,6 +5,49 @@ var
     S: linestring;
     a, b, c, d: integer;
 
+procedure switch_to_Z80;
+begin
+    inline($3e/$00/              { LD A,0           }
+           $fd/$2a/$c0/$fc/      { LD IY,(&HFCC0)   }
+           $dd/$21/$80/$01/      { LD IX,&H0180     }
+           $cd/$1c/$00/          { CALL &H001C      }
+           $fb)                  { EI               }
+end;
+
+procedure switch_to_R800;
+begin
+    inline($3e/$00/              { LD A,1           }
+           $fd/$2a/$c0/$fc/      { LD IY,(&HFCC0)   }
+           $dd/$21/$80/$01/      { LD IX,&H0180     }
+           $cd/$1c/$00/          { CALL &H001C      }
+           $fb)                  { EI               }
+end;
+
+function processor_type:byte;
+var soort:byte;
+
+begin
+    inline($fd/$2a/$c0/$fc/      { LD IY,(&HFCC0)   }
+           $dd/$21/$83/$01/      { LD IX,&H0183     }
+           $cd/$1c/$00/          { CALL &H001C      }
+           $32/soort/            { LD (SOORT),A     }
+           $fb);                 { EI               }
+    processor_type:=soort
+end;
+
+function msx_version:byte;
+var v:byte;
+
+begin
+     inline($3a/$c1/$fc/          { LD A,(&HFCC1) ; slot da ROM BIOS }
+            $21/$2d/$00/          { LD HL,&H002D     }
+            $cd/$0c/$00/          { CALL &H000C      }
+            $32/v);               { LD (V),A    }
+
+    msx_version:=v+1
+end;
+
+
 (*  Finds the n-th occurence of a char which is into a string. *)
 
 function NNPos(SearchPhrase, Phrase: linestring; Ntuple: byte): byte;
@@ -48,4 +91,6 @@ begin
     c := a mod 256;
     d := (a Div 256 ) And 63;
     writeln(a, ' ', b, ' ', c, ' ', d);
+    
+    writeln(msx_version);
 end.
