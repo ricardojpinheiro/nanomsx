@@ -1,4 +1,4 @@
-Const 
+Const
 	ctMaxPath = 127;    { Maximum path size - MSXDOS2 }
 
 Type
@@ -17,11 +17,6 @@ Type
 		End;
 
 	TTextMode = ( TextMode4080, TextMode32 );
-
-	TCursorStatus = ( CursorEnabled,
-                       	CursorDisabled,
-                       	CursorBlock,
-                       	CursorUnderscore );
 
 	TScreenStatus = Record
 			nWidth,
@@ -117,25 +112,6 @@ Begin
   CALSLT( regs );
 End;
 
-Procedure SetTextMode( mode : TTextMode );
-Const
-        ctINITXT  = $006C;    { Initialize screen for text mode (40x24) }
-        ctINIT32  = $006F;    { Initialize screen mode for text (32x24) }
-
-Var
-        regs    : TRegs;
-        EXPTBL  : Byte Absolute $FCC1; { Slot 0 }
-
-Begin
-  If( mode = TextMode4080 )  Then
-    regs.IX := ctINITXT
-  Else
-    regs.IX := ctINIT32;
-
-  regs.IY := EXPTBL;
-  CALSLT( regs );
-End;
-
 Procedure InitFnKeys;
 Const
 	ctINIFNK = $003E;
@@ -166,25 +142,6 @@ Begin
 
   regs.IY := EXPTBL;
   CALSLT( regs );
-End;
-
-Procedure SetCursorStatus( cursor : TCursorStatus );
-Var
-     nCount      : Byte;
-     strCtrlCode : String[3];
-
-Begin   { Procedure entry point }
-  Case( cursor ) Of
-    CursorEnabled    : strCtrlCode := 'x5';
-    CursorDisabled   : strCtrlCode := 'y5';
-    CursorBlock      : strCtrlCode := 'x4';
-    CursorUnderscore : strCtrlCode := 'y4';
-  End;
-
-  strCtrlCode := #27 + strCtrlCode;
-
-  For nCount := 1 To Length( strCtrlCode ) Do
-    CHPUT( strCtrlCode[nCount] );
 End;
 
 Procedure GetScreenStatus( Var scrStatus : TScreenStatus );

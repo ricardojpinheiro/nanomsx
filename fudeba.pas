@@ -1,9 +1,11 @@
 program teste;
 type 
     linestring = string[255];
+    
 var
     S: linestring;
     a, b, c, d: integer;
+    tempnumber0, tempnumber1: string[6];
 
 procedure switch_to_Z80;
 begin
@@ -47,6 +49,18 @@ begin
     msx_version:=v+1
 end;
 
+function Readkey: char;
+var
+    bt: integer;
+    qqc: byte absolute $FCA9;
+ 
+begin
+    Readkey := chr(0);
+    qqc := 1;
+    Inline($f3/$fd/$2a/$c0/$fc/$DD/$21/$9F/00/$CD/$1c/00/$32/bt/$fb);
+    Readkey := chr(bt);
+    qqc := 0;
+end;
 
 (*  Finds the n-th occurence of a char which is into a string. *)
 
@@ -73,7 +87,87 @@ begin
     NNPos := ResultPos;
 end;
 
+function readstring: linestring;
+type
+    ASCII = set of 0..127;
+var
+    NoPrint, Print, AllChars: ASCII;
+    c: char;
+    fallback: linestring;
+    
 begin
+    AllChars := [0..127];
+    NoPrint := [0..31, 127];
+    Print := AllChars - NoPrint;
+    c := ' ';
+    fallback := ' ';
+    while c <> #13 do
+    begin
+        c := readkey;
+        if ord(c) in Print then
+        begin
+            fallback := fallback + c;
+            write(c);
+        end;
+    end;
+    readstring := fallback;
+end;
+
+function Percentage (a, b: real): integer;
+
+(* Só é usado na rotina Location. *)
+
+begin
+    if b <> 0 then
+        Percentage := round(int((a*100)/b))
+    else
+        Percentage := 0;
+end;
+
+(*  Finds the n-th occurence of a char which is into a string. *)
+
+function NPos(SearchPhrase, Phrase: linestring; Ntuple: byte): byte;
+var
+    HowManyPos, ResultPos, counter, LengthPhrase, 
+    LengthSearchPhrase: byte;
+    temp: linestring;
+
+begin
+    LengthPhrase := length (Phrase);
+    LengthSearchPhrase := length (SearchPhrase);
+    counter := 1;
+    ResultPos := 0;
+    HowManyPos := 0;
+
+    while (counter <= LengthPhrase) and (HowManyPos < Ntuple) do
+    begin
+        temp := copy(Phrase, counter, LengthSearchPhrase);
+        if SearchPhrase = temp then
+        begin
+            ResultPos := counter;
+            HowManyPos := HowManyPos + 1;
+        end;
+        counter := counter + 1;
+    end;    
+
+    NPos := ResultPos;
+end;
+
+begin
+    S := readstring;
+    delete (s, 1, 1);
+    a := Pos(chr(32), S);
+    tempnumber0 := copy(S, 1, a - 1);
+    tempnumber1 := copy(S, a + 1, length(S));
+    writeln;
+    writeln('a: ', a, ' tempnumber0: ', tempnumber0, ' tempnumber1: ', tempnumber1);
+    val (tempnumber0, b,   d);
+    writeln(b, ' -> ', d);
+    val (tempnumber1, c,   d);
+    writeln(c, ' -> ', d);
+    exit;
+    
+    writeln(abs(3 - 10));
     S := 'abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz';
     writeln(S, ' ', length(S));
     writeln(NNPos('a', S, 1));
