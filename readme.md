@@ -42,13 +42,15 @@ It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse
  - SELECT-Y - Remove current line
  - Control+T - Go to specified line (F7)
  - SELECT-D - Report line/word/char count
-
-## Keystrokes not yet created
- - Any keystrokes regarding mark/unmark/copy/move text blocks.
+ - SELECT+B - Mark beginning of text block
+ - SELECT+E - Mark end of text block
+ - SELECT+C - Copy block to line
+ - SELECT+V - Move block to line
+ - SELECT+F - Delete block
 
 ## To the future.
 - ~~Fix problems regarding the use of MSX 2's VRAM.~~
-- Block routines, like copy/move/delete text blocks.
+- ~~Block routines, like copy/move/delete text blocks.
 - Maybe a way of opening two files simultaneously.
 
 MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.
