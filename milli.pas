@@ -1,6 +1,6 @@
 (* milli.pas - This wannabe GNU nano-like text editor is based on Qed-Pascal
  * (http://bit.ly/qedpascal). Our main approach is to have all GNU nano
- * funcionalities. MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.  *)
+ * funcionalities. MSX version by Ricardo Jurczyk Pinheiro - 2020/2022.  *)
 
 program milli;
 

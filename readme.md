@@ -53,4 +53,4 @@ It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse
 - ~~Block routines, like copy/move/delete text blocks.~~
 - Maybe a way of opening two files simultaneously.
 
-MSX version by Ricardo Jurczyk Pinheiro - 2020/2021.
+MSX version by Ricardo Jurczyk Pinheiro - 2020/2022.
