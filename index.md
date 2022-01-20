@@ -25,10 +25,10 @@ This github page reunites some text editors that I've been working with. Milli i
 Finally, the download link. [Here it goes](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli.com). If you want to get the source code, [you can find a ZIP file here](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli.zip). I used Qed-Editor as the base editor, but I cannot forget some [Kari Lammassaari (in memorian) libraries](https://manuel.msxnet.org/msx/softw/), like text window, blink and fastwrite routines (there is more, I guess), and [PopolonY2K framework](http://www.popolony2k.com.br/), from which I got some SCREEN 0 and MSX-DOS 2 routines. My greetings to their work.
 
 ### History
-- [2022-01-20 - v0.5 - Hoorah! Block marking!](https://github.com/ricardojpinheiro/nanomsx/releases/tag/v0.5).
-- [2021-10-04 - v0.3 - Slower than expected, but...](https://github.com/ricardojpinheiro/nanomsx/releases/tag/v0.3).
-- [2021-09-09 - v0.2 - Die, nasty bug!](https://github.com/ricardojpinheiro/nanomsx/releases/tag/v0.2).
-- [2021-09-02 - v0.1 - First public release](https://github.com/ricardojpinheiro/nanomsx/releases/tag/v0.1).
+- [2022-01-20 - v0.5 - Hoorah! Block marking!](https://github.com/ricardojpinheiro/nanomsx/releases/tag/v0.5)
+- [2021-10-04 - v0.3 - Slower than expected, but...](https://github.com/ricardojpinheiro/nanomsx/releases/tag/v0.3)
+- [2021-09-09 - v0.2 - Die, nasty bug!](https://github.com/ricardojpinheiro/nanomsx/releases/tag/v0.2)
+- [2021-09-02 - v0.1 - First public release](https://github.com/ricardojpinheiro/nanomsx/releases/tag/v0.1)
 
 ### Screenshots.
 We all love screenshots! Who doesn't? Here it goes some of them:
