@@ -325,63 +325,68 @@ begin
     lengthline := length(line);
 
     DisplayKeys(align);
-    c := readkey;
+    c := upcase(readkey);
 
-    case ord(c) of
-        76, 108:    begin
+    case c of
+        #76: begin
 (* left - L *)
-                        blankspaces := (maxwidth - lengthline) + 1;
-                        for i := 1 to blankspaces do
-                            insert(#32, line, lengthline + 1);
-                        temp := 'Text aligned to the left.';
-                    end;
-        82, 114:    begin
+                blankspaces := (maxwidth - lengthline) + 1;
+                for i := 1 to blankspaces do
+                    insert(#32, line, lengthline + 1);
+                    temp := 'Text aligned to the left.';
+            end;
+                    
+        #82: begin
 (* right - R *)        
-                        blankspaces := (maxwidth - lengthline);
-                        for i := 1 to blankspaces do
-                            insert(#32, line, 1);
-                        temp := 'Text aligned to the right.';
-                    end;
-        67, 99:     begin
+                blankspaces := (maxwidth - lengthline);
+                for i := 1 to blankspaces do
+                    insert(#32, line, 1);
+                    temp := 'Text aligned to the right.';
+                end;
+                    
+        #67: begin
 (* center - C *)
-                        blankspaces := (maxwidth - lengthline) div 2;
-                        for i := 1 to blankspaces do
-                            insert(#32, line, 1);
-                        temp := 'Text centered.';
-                    end;
-        74, 106:    begin
+                blankspaces := (maxwidth - lengthline) div 2;
+                for i := 1 to blankspaces do
+                    insert(#32, line, 1);
+                temp := 'Text centered.';
+            end;
+                    
+        #74: begin
 (* justify - J *)
-                        j := 1;
+                j := 1;
                         
 (*  Find all blank spaces in the phrase and save their positions. *)
-                        for i := 1 to (RDifferentPos(chr(32), line)) do
-                            if ord(line[i]) = 32 then
-                            begin
-                                justifyvector[j] := i;
-                                j := j + 1;
-                            end;
+                for i := 1 to (RDifferentPos(chr(32), line)) do
+                    if ord(line[i]) = 32 then
+                    begin
+                        justifyvector[j] := i;
+                        j := j + 1;
+                    end;
 
 (*  Insert blank spaces in the previous saved vector's positions. *)
-                        j := j - 1;
-                        k := (maxwidth - lengthline) div j;
-                        
-                        for i := j downto 1 do
-                        begin
-                            for l := 1 to k do
-                                insert(#32, line, justifyvector[i]);
-                            justifyvector[i] := justifyvector[i] + k;
-                        end;
+                j := j - 1;
+                k := (maxwidth - lengthline) div j;
+                
+                for i := j downto 1 do
+                begin
+                    for l := 1 to k do
+                        insert(#32, line, justifyvector[i]);
+                    justifyvector[i] := justifyvector[i] + k;
+                end;
 
-                        k := (maxwidth - lengthline) mod j;
-                        
-                        for l := 1 to k do
-                            insert(#32, line, justifyvector[1]);
-                        justifyvector[1] := justifyvector[1] + k;
-                        temp := 'Text justified.';
-                    end;
+                k := (maxwidth - lengthline) mod j;
+                
+                for l := 1 to k do
+                    insert(#32, line, justifyvector[1]);
+                justifyvector[1] := justifyvector[1] + k;
+                temp := 'Text justified.';
+            end;
     end;
+
     DisplayKeys(main);
-    StatusLine(temp);
+    if ord(c) in [67, 74, 76, 82] then
+        StatusLine(temp);
 
     FromRAMToVRAM(line, currentline);
     DrawScreen(currentline, screenline, 1);

@@ -82,7 +82,7 @@ end;
 procedure DisplayKeys (whichkey: KeystrokeLines);
 var
     BlinkSequence: array [1..6] of byte;
-    Line1, Line2: linestring;
+    Line1, Line2: string[80];
     BlinkLength: byte;
     
 begin
@@ -91,9 +91,9 @@ begin
 
     FillChar(BlinkSequence, sizeof(BlinkSequence), 0);
 
+	BlinkLength := 2;
     case whichkey of
         main:       begin
-                        BlinkLength := 2;
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 9;
                         BlinkSequence[3] := 22; BlinkSequence[4] := 34;
                         BlinkSequence[5] := 43; BlinkSequence[6] := 55;
@@ -103,31 +103,27 @@ begin
                         '~E MarkE ^J Align    ^T Go To Line');
                     end;
         search:     begin
-                        BlinkLength := 2;
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 11;
                         BlinkSequence[3] := 28; BlinkSequence[4] := 41;
                         Line1 := concat('^G Help   ~W Next forward  ',
-                                '^Q Backwards ^T Go To Line              ');
-                        Line2 := concat('^C Cancel ~Q Bext backward ',
-                                '^N Replace   ^X Exit                    ');
+                                '^Q Backwards ^T Go To Line');
+                        Line2 := concat('^C Cancel ~Q Next backward ',
+                                '^N Replace   ^X Exit');
                     end;
         replace:    begin
-                        BlinkLength := 2;
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 15;
-                        FillChar(Line1, sizeof(Line1), chr(32));
-                        FillChar(Line2, sizeof(Line2), chr(32));
                         Line1 := ' Y Yes         A All';
                         Line2 := ' N No         ^C Cancel';
                     end;
         align:      begin
-                        BlinkLength := 2;
+						BlinkLength := 1;
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 15;
-                        FillChar(Line1, sizeof(Line1), chr(32));
-                        FillChar(Line2, sizeof(Line2), chr(32));
-                        Line1 := ' L Left        C Center';
-                        Line2 := ' R Right       J Justify';
+                        Line1 := 'L Left        C Center';
+                        Line2 := 'R Right       J Justify';
                     end;
     end;
+    FillVRAM(0,  (maxwidth + 2)*(maxlength + 1), 32, ScreenStatus.nWidth);
+    FillVRAM(0,  (maxwidth + 2)*(maxlength + 2), 32, ScreenStatus.nWidth);
     WriteVRAM(0, (maxwidth + 2)*(maxlength + 1), Addr(Line1[1]), length(Line1));
     WriteVRAM(0, (maxwidth + 2)*(maxlength + 2), Addr(Line2[1]), length(Line2));
 
@@ -186,6 +182,7 @@ begin
     fillvram(0, startvram   , 0, $FFFF - startvram);
     fillvram(1, 0           , 0, $FFFF);
     
+    ClrWindow(EditWindowPtr);
     ClearStatusLine;
 end;
 
@@ -692,6 +689,9 @@ begin
     aux := Pos(chr(32), searchstring);
     tempnumber0 := copy(searchstring, 1, aux - 1);
     tempnumber1 := copy(searchstring, aux + 1, length(searchstring));
+    
+    gotoxy (50, 1); writeln(tempnumber0, ' <---> ', tempnumber1);
+    
     val (tempnumber0, destline,     aux);
     val (tempnumber1, destcolumn,   aux);
 
