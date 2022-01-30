@@ -347,7 +347,7 @@ Procedure WritelnWindow(WindowPtr:Pointer;St:String255);
 
 Procedure WriteWindow(WindowPtr:Pointer;St:String255);
     Begin
-	_WriteWindowOperation(WindowPtr,St,False);
+    _WriteWindowOperation(WindowPtr,St,False);
     End;
 
 Procedure GotoWindowXY(WindowPtr:Pointer;Col,Row:Byte);

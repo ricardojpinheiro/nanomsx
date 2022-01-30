@@ -394,7 +394,7 @@ begin
 
     case KindOf of
         1: begin (* Version *)
-                FastWriteln('Version 0.5 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
+                FastWriteln('Version 0.6 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
                 FastWriteln('Some rights reserved (not many!).');
                 writeln;
                 FastWriteln('This editor resembles the GNU nano editor, with the same');

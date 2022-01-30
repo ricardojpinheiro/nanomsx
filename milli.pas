@@ -6,7 +6,7 @@ program milli;
 
 {$i d:conio.inc}
 {$i d:dos.inc}
-{$i d:dos2err.inc}
+(* {$i d:dos2err.inc} *)
 {$i d:readvram.inc}
 {$i d:fillvram.inc}
 {$i d:fastwrit.inc}
@@ -25,7 +25,7 @@ var
     searchstring, replacestring:    string[40];
     line:                           linestring;
     savedfile, insertmode,
-    iscommand:                      boolean;
+    iscommand, blockmarked:         boolean;
     tempnumber0, tempnumber1,
     tempnumber2:                    string[6];
     i, j, tabnumber, newline,
@@ -52,7 +52,7 @@ begin
         Blink(1, maxlength + 1, maxwidth + 2);
         temp := concat('File Name to Read: ');
         FastWrite(temp);
-        filename := readstring;
+        filename := readstring(40);
     end;
 
     InitStructures;
@@ -118,7 +118,7 @@ begin
         tempfilename := filename;
 
         FastWrite(temp);
-        filename := readstring;
+        filename := readstring(40);
     end;
     
     assign(textfile, filename);
@@ -203,7 +203,7 @@ begin
         temp := 'Search (to replace): ';
         
     FastWrite (temp);
-    searchstring := readstring;
+    searchstring := readstring(40);
     
     searchlength := length(searchstring);
 
@@ -222,7 +222,7 @@ begin
 
     temp := concat('Replace with: ');
     FastWrite (temp);
-    replacestring := readstring;
+    replacestring := readstring(40);
     
     replacementlength := length (replacestring);
 
@@ -409,6 +409,31 @@ begin
 }
 end;
 
+procedure BlockHide(HideOrNot: boolean);
+begin
+    for i := 1 to maxlength do
+        if BlockMarked then
+            if  ((currentline - screenline + i) >= BlockStart) and
+                ((currentline - screenline + i) <= BlockEnd) then
+                    if HideOrNot then
+                        ClearBlink(2, i, maxwidth)
+                    else
+                        Blink(2, i, maxwidth);
+end;
+
+procedure BlockCover;
+begin
+    if BlockMarked then
+    begin
+        BlockHide(false);
+        temp := 'Block unhidden';
+        StatusLine(temp);
+        c := readkey;
+        BlockHide(true);
+        ClearStatusLine;
+    end;
+end;
+
 procedure BlockMark (TypeOfMarks: BlockMarkings; var BlockLine: integer);
 begin
     SetBlinkRate (5, 0);
@@ -421,14 +446,23 @@ begin
     str(BlockLine, tempnumber0);
 
     if TypeOfMarks = BlockBegin then
-        temp := 'First block line: '
+    begin
+        temp := 'First block line: ';
+        BlockMarked := false;
+    end
     else
-        temp := 'Last block line: ';
+        begin
+            temp := 'Last block line: ';
+            BlockMarked := true;
+        end;
 
     temp := concat (temp, tempnumber0);
+    BlockLine := BlockLine + 1;
+    BlockHide(false);
 
     StatusLine (temp);
     c := readkey;
+    BlockHide(true);
     ClearStatusLine;
 end;
 
@@ -481,6 +515,7 @@ begin
         EndBlock    := -1;
     end;
 
+    BlockMarked := false;
     DrawScreen(currentline, screenline, 1);
     ClearStatusLine;
 end;
@@ -531,6 +566,7 @@ begin
 (* D *)                    68, 100: Location        (HowMany);
 (* E *)                    69, 101: BlockMark       (BlockFinish, BlockEnd);           
 (* F *)                    70, 102: BlockOperations (2, BlockStart, BlockEnd, currentline);
+(* H *)                    72, 104: BlockCover;
 (* Q *)                    81, 113: WhereIs         (backwardsearch, true);
 (* V *)                    86, 118: BlockOperations (1, BlockStart, BlockEnd, currentline);
 (* W *)                    87, 119: WhereIs         (forwardsearch , true);

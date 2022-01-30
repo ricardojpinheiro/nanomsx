@@ -54,7 +54,7 @@ type
     anystr      = string [255];
     linestring  = string [128];
     lineptr     = ^linestring;
-    Pointer	= ^Byte;
+    Pointer = ^Byte;
 
 {$i d:fastwrit.inc}
 {$i d:readvram.inc}

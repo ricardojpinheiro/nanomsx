@@ -19,24 +19,45 @@ Begin
     ClearBlinkChar(column + 1, screenline + 1);
 End;
 
-function ReadString: linestring;
-var
-    c: char;
-    fallback: linestring;
-begin
-    c := ' ';
-    fallback := ' ';
-    while c <> #13 do
-    begin
-        c := readkey;
-        if ord(c) in Print then
-        begin
-            fallback := fallback + c;
-            write(c);
-        end;
-    end;
-    readstring := fallback;
-end;
+Function ReadString (MaxLen: Byte): linestring;
+Var
+	i:	Byte;
+	Ch:	Char;
+	St: linestring;
+Begin
+	fillchar(st, sizeof(st), chr(32));
+	i := 0;
+	Repeat
+		ch := readkey;
+		Case Ch Of
+			#30..#126,#128..#255:	Begin
+										If i < Maxlen Then
+										Begin
+											i := i + 1;
+											Write(Ch);
+											St := St + Ch;
+										End
+										Else
+											Write(#7);
+									End;
+			#8: 					Begin
+										If i > 0 Then
+										Begin
+											i := i-1;
+											Write(Ch);
+											Write(' ');
+											Write(Ch);
+											St[0] := Chr(i);
+										End
+										Else
+											Write(#7);
+									End;
+		End; {Case}
+
+	Until Ch = #13;
+
+    ReadString := St;
+End; {ReadString}
 
 procedure GetKey (var key: byte; var iscommand: boolean);
 var
@@ -48,6 +69,7 @@ begin
     iscommand   := false;
     inkey       := readkey;
     key         := ord(inkey);
+
     if key in NoPrint then
         iscommand := true;
 {    case key of
@@ -167,7 +189,8 @@ var
     counter:    real;
 
 begin
-    counter    := startvram;
+	BlockMarked 	:= false;
+    counter    		:= startvram;
 
 (*  Initialize structure. *)
     StatusLine('Initializing structures...');
@@ -218,7 +241,7 @@ begin
     EditWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, chr(32));
 
     GotoXY(3, 1);
-    FastWrite('milli 0.5');
+    FastWrite('milli 0.6');
 
     Blink(2, 1, maxwidth);
     DrawScreen(currentline, screenline, 1);
@@ -608,7 +631,7 @@ begin
             temp := 'Search: ';
         
         FastWrite (temp);
-        searchstring := readstring;
+        searchstring := readstring(40);
     end;
 
     if length (searchstring) = 0 then
@@ -683,7 +706,7 @@ begin
 
     FillChar(searchstring, sizeof(searchstring), chr(32));
     
-    searchstring := readstring;
+    searchstring := readstring(40);
     
     delete(searchstring, 1, 1);
     aux := Pos(chr(32), searchstring);
@@ -743,7 +766,7 @@ begin
     WritelnWindow(EditWindowPtr, 'Ctrl+T - Go to specified line (F7) | SELECT+D - Report line/word/char count');
     WritelnWindow(EditWindowPtr, 'SELECT+B - Mark beginning of block | SELECT+E - Mark end of the block');
     WritelnWindow(EditWindowPtr, 'SELECT+C - Copy block to line      | SELECT+V - Move block to line');
-    WritelnWindow(EditWindowPtr, 'SELECT+F - Delete block');    
+    WritelnWindow(EditWindowPtr, 'SELECT+F - Delete block			 | SELECT+H - Unhide block');    
     c := readkey;
     DrawScreen(currentline, screenline, 1);
 end;

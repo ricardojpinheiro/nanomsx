@@ -1,9 +1,7 @@
 {fillvram.inc}
 
-Procedure FillVram(VramBlockUsed :Byte;
-                    VramAddr     :Integer;
-		    FillValue    :Byte;
-                    ByteCount    :Integer);
+Procedure FillVram (VramBlockUsed: Byte; VramAddr: Integer; 
+            FillValue: Byte; ByteCount: Integer);
 
 { VramBlocUsed  = 0 = first 64 Kb
                   1 = second 64 Kb
@@ -28,4 +26,3 @@ Begin
       $B0/$20/$F6/ $F3/$3e/ 0  /$D3/$99/$3E/$2D/$F6/$80/$D3/$99
         );
 End;
-

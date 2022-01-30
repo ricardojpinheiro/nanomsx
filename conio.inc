@@ -1,31 +1,31 @@
 Const
-	ctMaxPath = 127;    { Maximum path size - MSXDOS2 }
+    ctMaxPath = 127;    { Maximum path size - MSXDOS2 }
 
 Type
-	TFileName	= String[ctMaxPath];       { File name path type }
-	Pointer		= ^Byte;                   { Pointer generic type }
-	TString		= String[255];
-	Str15 		= String[15];
+    TFileName   = String[ctMaxPath];       { File name path type }
+    Pointer     = ^Byte;                   { Pointer generic type }
+    TString     = String[255];
+    Str15       = String[15];
 
-	TRegs = Record
-		IX       : Integer;             { 16Bit index registers }
-		IY       : Integer;
+    TRegs = Record
+        IX       : Integer;             { 16Bit index registers }
+        IY       : Integer;
 
-		Case Byte Of    { 8Bit registers and 16Bit registers - WORD_REGS }
-    			0 : ( C,B,E,D,L,H,F,A  : Byte );      { 8bit registers  }
-    			1 : ( BC,DE,HL,AF      : Integer );   { 16bit registers }
-		End;
+        Case Byte Of    { 8Bit registers and 16Bit registers - WORD_REGS }
+                0 : ( C,B,E,D,L,H,F,A  : Byte );      { 8bit registers  }
+                1 : ( BC,DE,HL,AF      : Integer );   { 16bit registers }
+        End;
 
-	TTextMode = ( TextMode4080, TextMode32 );
+    TTextMode = ( TextMode4080, TextMode32 );
 
-	TScreenStatus = Record
-			nWidth,
-			nBkColor,
-			nFgColor,
-			nBdrColor : Byte;
-			bFnKeyOn : Boolean;
-			TextMode : TTextMode;
-			End;
+    TScreenStatus = Record
+            nWidth,
+            nBkColor,
+            nFgColor,
+            nBdrColor : Byte;
+            bFnKeyOn : Boolean;
+            TextMode : TTextMode;
+            End;
 
 Procedure CALSLT( Var regs : TRegs );
 Var
@@ -114,15 +114,15 @@ End;
 
 Procedure InitFnKeys;
 Const
-	ctINIFNK = $003E;
+    ctINIFNK = $003E;
 Var
-	regs	: TRegs;
-        EXPTBL  : Byte Absolute $FCC1; { Slot 0 }	
+    regs    : TRegs;
+        EXPTBL  : Byte Absolute $FCC1; { Slot 0 }   
 
 Begin
-	regs.IX := ctINIFNK;
-	regs.IY := EXPTBL;
-  	CALSLT( regs );
+    regs.IX := ctINIFNK;
+    regs.IY := EXPTBL;
+    CALSLT( regs );
 End;
 
 Procedure SetFnKeyStatus( bFnKeyStatus : Boolean );
@@ -195,7 +195,7 @@ end;
 
 function msx_version: byte;
 var 
-	version :	byte;
+    version :   byte;
 begin
   inline($3e/$80/              { LD A,&H80        }
          $21/$2d/$00/          { LD HL,&H002D     }
