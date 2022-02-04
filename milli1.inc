@@ -3,77 +3,6 @@
 *  So, some routines were taken from the main program to be placed here.
 *)
 
-const
-    CONTROLA    = 1;
-    CONTROLB    = 2;
-    CONTROLC    = 3;
-    CONTROLD    = 4;
-    CONTROLE    = 5;
-    CONTROLF    = 6;
-    CONTROLG    = 7;
-(*    CONTROLH    = 8; *)
-(*    CONTROLI    = 9; *)
-    CONTROLJ    = 10;
-(*    CONTROLK    = 11; *)
-(*    CONTROLL    = 12; *)
-(*    CONTROLM    = 13; *)
-    CONTROLN    = 14;
-    CONTROLO    = 15;
-    CONTROLP    = 16;
-    CONTROLQ    = 17;
-(*    CONTROLR    = 18; *)
-    CONTROLS    = 19;
-    CONTROLT    = 20;
-(*    CONTROLU    = 21; *)
-    CONTROLV    = 22;
-    CONTROLW    = 23;
-(*    CONTROLX    = 24; *)
-    CONTROLY    = 25;
-    CONTROLZ    = 26;
-    BS          = 8;
-    TAB         = 9;
-    HOME        = 11;
-    CLS         = 12;
-    ENTER       = 13;
-    INSERT      = 18;
-    SELECT      = 24;
-    ESC         = 27;
-    RightArrow  = 28;
-    LeftArrow   = 29;
-    UpArrow     = 30;
-    DownArrow   = 31;
-    Space       = 32;
-    DELETE      = 127;
-
-    maxlines    = 1568;
-    maxcols     = 80;
-    maxwidth    = 78;
-    maxlength   = 21;
-
-    startvram       = 5120;
-    limitvram       = 65280;
-
-type
-    RStructure          = record
-        VRAMBank:           byte;
-        VRAMposition:       integer;
-    end;
-    
-    linestring          = string [maxcols];
-    KeystrokeLines      = (main, search, replace, align);
-    Directions          = (forwardsearch, backwardsearch);
-    LocationOptions     = (Position, HowMany);
-    BlockMarkings       = (BlockBegin, BlockFinish);
-    ASCII               = set of 0..255;
-
-var
-    textlines:          array [1..maxlines] of RStructure;
-    emptylines:         array [1..maxlines] of boolean;
-    temp:               linestring;
-    StatusWindowPtr:    Pointer;
-    NoPrint, Print, 
-    AllChars:           ASCII;
-
 function Readkey: char;
 var
     bt: integer;
@@ -89,7 +18,7 @@ end;
 
 (* Finds the last occurence of a char into a string. *)
 
-function RPos(Character: char; Phrase: linestring): integer;
+function RPos(Character: char; Phrase: TString): integer;
 var
     i: byte;
     Found: boolean;
@@ -111,7 +40,7 @@ end;
 (*  Finds the first occurence of a char which is different into a
 *   string. *)
 
-function DifferentPos(Character: char; Phrase: linestring): byte;
+function DifferentPos(Character: char; Phrase: TString): byte;
 var
     i: byte;
     Found: boolean;
@@ -137,7 +66,7 @@ end;
 (*  Finds the last occurence of a char which is different into a
 *   string. *)
 
-function RDifferentPos(Character: char; Phrase: linestring): integer;
+function RDifferentPos(Character: char; Phrase: TString): integer;
 var
     i: byte;
     Found: boolean;
@@ -162,11 +91,11 @@ end;
 
 (*  Finds the n-th occurence of a char which is into a string. *)
 (*
-function NPos(SearchPhrase, Phrase: linestring; Ntuple: byte): byte;
+function NPos(SearchPhrase, Phrase: TString; Ntuple: byte): byte;
 var
     HowManyPos, ResultPos, counter, LengthPhrase, 
     LengthSearchPhrase: byte;
-    temp: linestring;
+    temp: TString;
 
 begin
     LengthPhrase := length (Phrase);
@@ -190,11 +119,11 @@ begin
 end;
 *)
 
-procedure CheatAPPEND (FileName: linestring);
+procedure CheatAPPEND (FileName: TString);
 var
     i, FirstTwoDotsFound, LastBackSlashFound: byte;
     APPEND: string[7];
-    Path, Temporary: linestring;
+    Path, Temporary: TString;
     Registers: TRegs;
     
 begin
@@ -245,13 +174,13 @@ begin
     inline($3e/$00/$fd/$2a/$c0/$fc/$dd/$21/$80/$01/$cd/$1c/$00/$fb);
 end;
 
-procedure FromRAMToVRAM(var tempstr: linestring; linenumber: integer);
+procedure FromRAMToVRAM(var tempstr: TString; linenumber: integer);
 begin
     with textlines[linenumber] do
         WriteVRAM(VRAMBank, VRAMposition, addr(tempstr), maxcols);
 end;
 
-procedure FromVRAMToRAM(var tempstr: linestring; linenumber: integer);
+procedure FromVRAMToRAM(var tempstr: TString; linenumber: integer);
 begin
     with textlines[linenumber] do
         ReadVRAM(VRAMBank, VRAMposition, addr(tempstr), maxcols);
@@ -394,7 +323,7 @@ begin
 
     case KindOf of
         1: begin (* Version *)
-                FastWriteln('Version 0.6 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
+                FastWriteln('Version 0.7 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
                 FastWriteln('Some rights reserved (not many!).');
                 writeln;
                 FastWriteln('This editor resembles the GNU nano editor, with the same');

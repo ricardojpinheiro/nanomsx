@@ -3,9 +3,6 @@ Procedure ReadVram (VramBlockUsed:Byte; VramAddr, RamAddr, ByteCount: Integer);
 { VramBlockUsed  =  0 = first 64 Kb
                     1 = second 64 Kb
                     2 = Expansion Vram 64 Kb }
-
-Var Expansion, AddrHi, AddrMid, AddrLo :Byte;
-
 Begin
     If VramBlockUsed = 2 Then
         Expansion := $40 {Set the bit 6 (MXC) }

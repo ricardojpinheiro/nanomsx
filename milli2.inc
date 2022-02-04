@@ -4,7 +4,6 @@
 *)
 
 var
-    Registers:                      TRegs;
     ScreenStatus:                   TScreenStatus;
     EditWindowPtr:                  Pointer;
     MSXDOSversion:                  TMSXDOSVersion;
@@ -19,11 +18,11 @@ Begin
     ClearBlinkChar(column + 1, screenline + 1);
 End;
 
-Function ReadString (MaxLen: Byte): linestring;
+Function ReadString (MaxLen: Byte): TString;
 Var
 	i:	Byte;
 	Ch:	Char;
-	St: linestring;
+	St: TString;
 Begin
 	fillchar(st, sizeof(st), chr(32));
 	i := 0;
@@ -72,20 +71,22 @@ begin
 
     if key in NoPrint then
         iscommand := true;
-{    case key of
-        1..31, 127: iscommand := true;
-    end;
+
+{
+	case key of
+		1..31, 127: iscommand := true;
+	end;
 }
 end;
 
-procedure quick_display(x, y: integer; s: linestring);
+procedure quick_display(x, y: integer; s: TString);
 begin
     GotoWindowXY(EditWindowPtr, x, y);
     WriteWindow (EditWindowPtr, s);
     ClrEolWindow(EditWindowPtr);
 end;
 
-procedure StatusLine (message: linestring);
+procedure StatusLine (message: TString);
 var
     lengthmessage, position: byte;
     
@@ -103,9 +104,9 @@ end;
 
 procedure DisplayKeys (whichkey: KeystrokeLines);
 var
-    BlinkSequence: array [1..6] of byte;
-    Line1, Line2: string[80];
-    BlinkLength: byte;
+    BlinkSequence: 	array [1..6] of byte;
+    Line1, Line2: 	TString;
+    BlinkLength: 	byte;
     
 begin
     for i := 2 to 3 do
@@ -116,21 +117,21 @@ begin
 	BlinkLength := 2;
     case whichkey of
         main:       begin
-                        BlinkSequence[1] := 1;  BlinkSequence[2] := 9;
+                        BlinkSequence[1] := 1;	BlinkSequence[2] := 9;
                         BlinkSequence[3] := 22; BlinkSequence[4] := 34;
                         BlinkSequence[5] := 43; BlinkSequence[6] := 55;
                         Line1 := concat('^G Help ^O Write Out ^W Where Is ', 
-                        '~B MarkB ^C Location ~C Line count');
+										'~B MarkB ^C Location ~C Line count');
                         Line2 := concat('^Z Exit ^P Read File ^N Replace  ',
-                        '~E MarkE ^J Align    ^T Go To Line');
+										'~E MarkE ^J Align    ^T Go To Line');
                     end;
         search:     begin
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 11;
                         BlinkSequence[3] := 28; BlinkSequence[4] := 41;
                         Line1 := concat('^G Help   ~W Next forward  ',
-                                '^Q Backwards ^T Go To Line');
+										'^Q Backwards ^T Go To Line');
                         Line2 := concat('^C Cancel ~Q Next backward ',
-                                '^N Replace   ^X Exit');
+										'^N Replace   ^X Exit');
                     end;
         replace:    begin
                         BlinkSequence[1] := 1;  BlinkSequence[2] := 15;
@@ -159,7 +160,7 @@ end;
 procedure DrawScreen (currentline, screenline: integer; j: byte);
 begin
     if highestline <= (maxlength - j) then
-        aux := highestline
+		aux := highestline
     else
         aux := maxlength - j;
 
@@ -189,8 +190,8 @@ var
     counter:    real;
 
 begin
-	BlockMarked 	:= false;
-    counter    		:= startvram;
+	BlockMarked	:= false;
+    counter		:= startvram;
 
 (*  Initialize structure. *)
     StatusLine('Initializing structures...');
@@ -216,14 +217,14 @@ begin
     if ScreenStatus.bFnKeyOn then
         SetFnKeyStatus (false);
     
-    Width(80);
+    ScreenWidth(80);
     ClearAllBlinks;
     SetBlinkColors(ScreenStatus.nBkColor, ScreenStatus.nFgColor);
     SetBlinkRate(5, 0);
 
 (*  Some variables. *)   
-    currentline := 1; screenline := 1;         highestline := 1;
-    column      := 1; insertmode  := false;    savedfile   := false;   
+    currentline := 1; 		screenline := 1;        highestline := 1;
+    column      := 1; 		insertmode  := false;   savedfile   := false;   
     FillChar(filename,      sizeof(filename),       chr(32));
     FillChar(temp,          sizeof(temp),           chr(32));
     FillChar(filename,      sizeof(filename),       chr(32));
@@ -241,7 +242,7 @@ begin
     EditWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, chr(32));
 
     GotoXY(3, 1);
-    FastWrite('milli 0.6');
+    FastWrite('milli 0.7');
 
     Blink(2, 1, maxwidth);
     DrawScreen(currentline, screenline, 1);
@@ -262,33 +263,35 @@ begin
     if column > maxwidth then
         delay(10)
     else
-    begin
-        GotoWindowXY(EditWindowPtr, column, screenline);
-        WriteWindow(EditWindowPtr, inkey);
+		begin
+			GotoWindowXY(EditWindowPtr, column, screenline);
+			WriteWindow(EditWindowPtr, inkey);
 
-        if length(line) = 0 then
-        begin
-            InsertLinesIntoText (currentline - 1, highestline, 1);
-            FillChar(line, sizeof(line), chr(32));
-        end;
+			if length(line) = 0 then
+			begin
+				InsertLinesIntoText (currentline - 1, highestline, 1);
+				FillChar(line, sizeof(line), chr(32));
+			end;
 
-        while length(line) <= column do
-            line := line + ' ';
+			while length(line) <= column do
+				line := line + ' ';
 
-        insert(inkey, line, column);
-        column := column + 1;
+			insert(inkey, line, column);
+			column := column + 1;
 
-        if not insertmode then
-            delete(line, column, 1);
+			if not insertmode then
+				delete(line, column, 1);
 
 (* redraw current line if in insert mode *)
-        if insertmode then
-            quick_display(1, screenline, line);
+
+			if insertmode then
+				quick_display(1, screenline, line);
 
 (* A little delay when you are close to the end of a line *)
-        if column >= maxwidth then
-            delay(10);
-    end;
+
+			if column >= maxwidth then
+				delay(10);
+		end;
     FromRAMToVRAM(line, currentline);    
     CursorOn;
 end;
@@ -423,13 +426,13 @@ procedure ins;
 begin
     if insertmode then
     begin
-        temp := 'Insert mode off';
-        insertmode := false;
+        temp 		:= 'Insert mode off';
+        insertmode 	:= false;
     end
     else
     begin
-        temp := 'Insert mode on';
-        insertmode := true;
+        temp 		:= 'Insert mode on';
+        insertmode 	:= true;
     end;
     StatusLine(temp);
 end;
@@ -611,7 +614,7 @@ end;
 procedure WhereIs (direction: Directions; nextoccurrence: boolean);
 var
     pointer, len        : integer;
-    tempsearchstring    : linestring;
+    tempsearchstring    : TString;
     stopsearch          : integer;
  
 begin
@@ -766,7 +769,7 @@ begin
     WritelnWindow(EditWindowPtr, 'Ctrl+T - Go to specified line (F7) | SELECT+D - Report line/word/char count');
     WritelnWindow(EditWindowPtr, 'SELECT+B - Mark beginning of block | SELECT+E - Mark end of the block');
     WritelnWindow(EditWindowPtr, 'SELECT+C - Copy block to line      | SELECT+V - Move block to line');
-    WritelnWindow(EditWindowPtr, 'SELECT+F - Delete block			 | SELECT+H - Unhide block');    
+    WritelnWindow(EditWindowPtr, 'SELECT+F - Delete block            | SELECT+H - Unhide block');    
     c := readkey;
     DrawScreen(currentline, screenline, 1);
 end;
@@ -776,12 +779,11 @@ var
     totalwords              : integer;
     abovechar, totalchar, 
     percentchar             : real;
-    temp2                   : linestring;
+    temp2                   : TString;
 
 begin
     FillChar(temp, sizeof(temp), chr(32));
-
-(*  Line count - Calculating percentage. *)    
+(*  Line count - Percentage. *)    
     str(currentline, tempnumber0);
     str(highestline, tempnumber1);
     str((round(int((currentline*100)/highestline))), tempnumber2);
@@ -799,11 +801,9 @@ begin
         FromVRAMToRAM(line, currentline);
 
         j := length(line);
-
         if j = 0 then
             j := 1;
-
-(*  Calculating percentage. *)        
+(*  Column count - Percentage. *)        
         str(column, tempnumber0);
         str(j, tempnumber1);
         str((round(int((column*100)/j))) , tempnumber2);
@@ -827,7 +827,7 @@ begin
     if totalchar = 0 then
         totalchar := 1;
     
-(*  Calculating percentage. *)
+(*  Char count - percentage. *)
     str(abovechar:6:0                   ,   tempnumber0);
     str(totalchar:6:0                   ,   tempnumber1);
 
@@ -846,7 +846,6 @@ begin
     if Types = HowMany then
     begin
         totalwords  := 0;
-
         FillChar(temp2, sizeof(temp2), chr(32));
 
         for i := 1 to highestline do
@@ -860,11 +859,9 @@ begin
         end;
         
         TotalWords := TotalWords + 1;
-        
         str(TotalWords      , tempnumber0);
         insert(tempnumber0  , temp  , 1);
         insert('Words: '    , temp  , 1);
     end;
-
     StatusLine(temp);
 end;

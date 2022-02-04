@@ -4,6 +4,7 @@
 
 program milli;
 
+{$i d:defs.inc}
 {$i d:conio.inc}
 {$i d:dos.inc}
 (* {$i d:dos2err.inc} *)
@@ -13,29 +14,9 @@ program milli;
 {$i d:txtwin.inc}
 {$i d:blink.inc}
 {$i d:milli1.inc}
+{$i d:milli2.inc}
 
 {$u-}
-
-var
-    currentline, highestline:       integer; 
-    key, screenline, column:        byte;
-    tabset:                         array [1..maxwidth] of boolean;
-    textfile:                       text;
-    filename:                       TFileName;
-    searchstring, replacestring:    string[40];
-    line:                           linestring;
-    savedfile, insertmode,
-    iscommand, blockmarked:         boolean;
-    tempnumber0, tempnumber1,
-    tempnumber2:                    string[6];
-    i, j, tabnumber, newline,
-    newcolumn, rtcode, aux:         integer;
-    c:                              char;
-
-    BlockStart, BlockEnd, 
-    BlockDest:                      integer;
-
-{$i milli2.inc}
 
 procedure ReadFile (AskForName: boolean);
 var
@@ -102,7 +83,7 @@ end;
 
 procedure WriteOut (AskForName: boolean);
 var
-    tempfilename: TFileName;
+    tempfilename: TString;
     
 begin
     if AskForName then
@@ -153,7 +134,6 @@ begin
     StatusLine(temp);
 end;
 
-
 procedure ExitToDOS;
 begin
     GotoXY(1, maxlength + 1);
@@ -182,11 +162,9 @@ end;
 
 procedure SearchAndReplace;
 var
-    position, linesearch:               integer;
-    searchlength, replacementlength,
-    searchperline:                      byte;
-    choice:                             char;
-    tempsearchstring:                   linestring;
+    position, linesearch, searchlength,
+    replacementlength:                  integer;
+    tempsearchstring:                   TString;
    
 begin
     DisplayKeys (search);
@@ -226,8 +204,7 @@ begin
     
     replacementlength := length (replacestring);
 
-    choice := ' ';    
-    searchperline := 1;
+    c := chr(32);    
 
     for linesearch := 1 to highestline do
     begin
@@ -250,15 +227,15 @@ begin
 
             GotoXY(1, maxlength + 1);
 
-            if not (choice in ['a', 'A']) then
+            if not (c in ['a', 'A']) then
             begin
                 FastWrite('Replace this instance?');
-                choice := readkey;
+                c := readkey;
             end;
 
             ClearBlink(column + 1, screenline + 1, searchlength);
 
-            case ord (choice) of
+            case ord (c) of
             CONTROLC:          begin
                                     ClrEol;
                                     StatusLine('Cancelled');
@@ -292,15 +269,14 @@ begin
             WriteWindow(EditWindowPtr, temp);
         end;
     end;
-    DisplayKeys(main);
     ClearStatusLine;
+    DisplayKeys(main);
 end;
 
 procedure AlignText;
 var
-    lengthline, k, 
-    blankspaces, l: byte;
-    justifyvector:  array [1..maxwidth] of byte;
+    lengthline, k, blankspaces, l:  byte;
+    justifyvector:                  array [1..maxwidth] of byte;
 
 begin
     FillChar(line, sizeof(line), chr(32));
@@ -411,7 +387,7 @@ end;
 
 procedure BlockHide(HideOrNot: boolean);
 begin
-    for i := 1 to maxlength do
+    for i := maxlength downto 1 do
         if BlockMarked then
             if  ((currentline - screenline + i) >= BlockStart) and
                 ((currentline - screenline + i) <= BlockEnd) then
@@ -419,14 +395,18 @@ begin
                         ClearBlink(2, i, maxwidth)
                     else
                         Blink(2, i, maxwidth);
+    Blink(2, 1, maxwidth);
 end;
 
 procedure BlockCover;
 begin
     if BlockMarked then
     begin
+        str(BlockStart, tempnumber0);
+        str(BlockEnd,   tempnumber1);
         BlockHide(false);
-        temp := 'Block unhidden';
+        temp := concat( 'Block from line ', tempnumber0, 
+                        ' to line ', tempnumber1);
         StatusLine(temp);
         c := readkey;
         BlockHide(true);
@@ -484,11 +464,11 @@ begin
     end;
 
     if KindOf = 2 then
-        temp := concat( 'Block from ', tempnumber0, ' to ', tempnumber1, 
+        temp := concat( 'Block from line ', tempnumber0, ' to line ', tempnumber1, 
                         ' will be deleted.')
     else
-        temp := concat( 'Block from ', tempnumber0, ' to ', tempnumber1, 
-                        ' will be ', searchstring, ' to ', tempnumber2, '.');
+        temp := concat( 'Block from line ', tempnumber0, ' to line ', tempnumber1, 
+                        ' will be ', searchstring, ' to line ', tempnumber2, '.');
     
     StatusLine(temp);
     c := readkey;
