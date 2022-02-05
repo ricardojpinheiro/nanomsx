@@ -78,11 +78,10 @@ Type
 	(*	Z80 registers. *)
 
 	TRegs 		= Record
-		IX:		Integer;             { 16Bit index registers }
-		IY: 	Integer;
+		IX, IY:					Integer;             { 16Bit index registers }
 		Case Byte Of    { 8Bit registers and 16Bit registers - WORD_REGS }
-			0: ( C,B,E,D,L,H,F,A  : Byte );      { 8bit registers  }
-			1: ( BC,DE,HL,AF      : Integer );   { 16bit registers }
+			0: 					( C,B,E,D,L,H,F,A: 	Byte );		{ 8bit registers  }
+			1: 					( BC,DE,HL,AF:		Integer );	{ 16bit registers }
         End;
 	
 	(*	SCREEN 0 and 1. *)
@@ -92,25 +91,26 @@ Type
 	(*	Screen status. *)
 
     TScreenStatus 	= Record
-		nWidth, 
-		nBkColor,
-		nFgColor,
-		nBdrColor: 	Byte;
-		bFnKeyOn: 	Boolean;
-		TextMode: 	TTextMode;
+		nWidth, nBkColor,
+		nFgColor, nBdrColor:	Byte;
+		bFnKeyOn:				Boolean;
+		TextMode:				TTextMode;
 	End;
 
 	(*	MSX-DOS version. *)
 
 	TMSXDOSVersion 	= Record
-		nKernelMajor, nKernelMinor, nSystemMajor, nSystemMinor: Byte;
+		nKernelMajor, 
+		nKernelMinor, 
+		nSystemMajor, 
+		nSystemMinor: 			Byte;
 	End;
 
 	(*	Used in the array which know where the text are saved into VRAM. *)
 
 	TVRAMText		= record
-        VRAMBank:           byte;
-        VRAMposition:       integer;
+        VRAMBank:           	Byte;
+        VRAMposition:       	Integer;
     end;
 
 	(*	Scalar types, in order: 
@@ -138,6 +138,7 @@ Var
 	CSRY:		Byte Absolute $F3DC;
 	CSRX:		Byte Absolute $F3DD;
 	CNSDFG: 	Byte Absolute $F3DE; { =0 when function keys are not displayed }
+	CSRSW: 		Byte absolute $FCA9;
 	SCRMOD: 	Byte Absolute $FCAF; { Current screen number }
 	FORCLR: 	Byte Absolute $F3E9; { Foreground color }
 	BAKCLR: 	Byte Absolute $F3EA; { Background color }
@@ -146,37 +147,50 @@ Var
 
 	(*	These variables are used by include files. *)
 
-    VramLocation, Vram, Ram, TableAddr:				Integer;    
-	len, Width, Height, Byt,
+    VramLocation, Vram, Ram, TableAddr, len:		Integer;    
+	Width, Height, Byt,
 	Expansion, AddrHi, AddrMid, AddrLo: 			Byte;
-	st:												TString;
 	pt:                 							Pointer;
     at:                 							Integer Absolute pt;
 	ColTbl: 										Array[0..255] Of Byte;
 
-	i:												Integer;
+	i, j, k, Count:									Integer;
 
 	(*	These variables are used by milli itself. *)
 
-    textlines:          array [1..maxlines] of TVRAMText;
-    emptylines:         array [1..maxlines] of boolean;
-    temp:               TString;
-    NoPrint, Print, 
-    AllChars:           ASCII;
+    textlines:          				array [1..maxlines] of TVRAMText;
+    emptylines:         				array [1..maxlines] of boolean;
+    temp:               				TString;
+    NoPrint, Print, AllChars:           ASCII;
     
     currentline, highestline:           integer; 
-    key, screenline, column:            byte;
+    key, screenline, column, 
+    BlinkLength: 				        byte;
     tabset:                             array [1..maxwidth] of boolean;
     textfile:                           text;
-    filename, searchstring, 
-    replacestring, line:  				TString;
+    filename, searchstring, line, Path,
+    tempsearchstring, replacestring,
+    Line1, Line2:  						TString;
     savedfile, insertmode, iscommand,
-    blockmarked:                        boolean;
+    blockmarked, Found, LastPosition:	boolean;
     tempnumber0, tempnumber1,
     tempnumber2:                        string[5];
-    j, tabnumber, newline, rtcode,
-    newcolumn, aux:                     integer;
+    tabnumber, newline, rtcode, aux,
+    newcolumn, stopsearch, point:		integer;
     c:                                  char;
+	counter:    						real;
 
-    BlockStart, BlockEnd, BlockDest:    integer;    
+    BlockStart, BlockEnd, BlockDest,
+    NewBeginBlock:						integer;    
     
+	totalwords:							integer;
+    abovechar, totalchar, percentchar:	real;
+
+	lengthmessage, ranking:				byte;
+	BlinkSequence: 						array [1..6] of byte;
+	destline, destcolumn: 				integer;
+    
+    
+    ScreenStatus:                   TScreenStatus;
+    EditWindowPtr:                  Pointer;
+    MSXDOSversion:                  TMSXDOSVersion;

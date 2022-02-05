@@ -1,28 +1,60 @@
 (*
 *  milli1.inc - Pascal library which is used with the milli text editor.
-*  So, some routines were taken from the main program to be placed here.
+*  Here we have some routines which are accessory to the program.
 *)
 
-function Readkey: char;
-var
-    bt: integer;
-    qqc: byte absolute $FCA9;
- 
+(* Read only one key, no echoes to the screen.*)
+
+Function Readkey: char;
 begin
     Readkey := chr(0);
-    qqc := 1;
-    Inline($f3/$fd/$2a/$c0/$fc/$DD/$21/$9F/00/$CD/$1c/00/$32/bt/$fb);
-    Readkey := chr(bt);
-    qqc := 0;
+    CSRSW := 1;
+    Inline($f3/$fd/$2a/$c0/$fc/$DD/$21/$9F/00/$CD/$1c/00/$32/Byt/$fb);
+    Readkey := chr(Byt);
+    CSRSW := 0;
 end;
+
+(* Read a string, echoes to the screen. Should tell how many chars would be read. *)
+
+Function ReadString (MaxLen: Byte): TString;
+Begin
+	fillchar(temp, sizeof(temp), chr(32));
+	i := 0;
+	Repeat
+		c := readkey;
+		Case c Of
+			#30..#126,#128..#255:	Begin
+										If i < Maxlen Then
+										Begin
+											i := i + 1;
+											Write(c);
+											temp := temp + c;
+										End
+										Else
+											Write(#7);
+									End;
+			#8: 					Begin
+										If i > 0 Then
+										Begin
+											i := i-1;
+											Write(c);
+											Write(' ');
+											Write(c);
+											temp[0] := Chr(i);
+										End
+										Else
+											Write(#7);
+									End;
+		End; {Case}
+
+	Until c = #13;
+
+    ReadString := temp;
+End; {ReadString}
 
 (* Finds the last occurence of a char into a string. *)
 
-function RPos(Character: char; Phrase: TString): integer;
-var
-    i: byte;
-    Found: boolean;
-
+Function RPos(Character: char; Phrase: TString): integer;
 begin
     i := length(Phrase);
     Found := false;
@@ -37,15 +69,11 @@ begin
     if Not Found then RPos := 0;
 end;
 
-(*  Finds the first occurence of a char which is different into a
-*   string. *)
+(*  Finds the first occurence of a char which is different into a string. *)
 
-function DifferentPos(Character: char; Phrase: TString): byte;
-var
-    i: byte;
-    Found: boolean;
+Function DifferentPos(Character: char; Phrase: TString): byte;
 
-(* Só é usado dentro da rotina AlignText. *)
+(* Used only into AlignText procedure. *)
 
 begin
     i := 1;
@@ -63,15 +91,11 @@ begin
     if Not Found then DifferentPos := 0;
 end;
 
-(*  Finds the last occurence of a char which is different into a
-*   string. *)
+(*  Finds the last occurence of a char which is different into a string. *)
 
-function RDifferentPos(Character: char; Phrase: TString): integer;
-var
-    i: byte;
-    Found: boolean;
+Function RDifferentPos(Character: char; Phrase: TString): integer;
 
-(* Só é usado dentro da rotina AlignText. *)
+(* Used only into AlignText procedure. *)
     
 begin
     i := length(Phrase);
@@ -89,48 +113,19 @@ begin
     if Not Found then RDifferentPos := 0;
 end;
 
-(*  Finds the n-th occurence of a char which is into a string. *)
-(*
-function NPos(SearchPhrase, Phrase: TString; Ntuple: byte): byte;
-var
-    HowManyPos, ResultPos, counter, LengthPhrase, 
-    LengthSearchPhrase: byte;
-    temp: TString;
-
-begin
-    LengthPhrase := length (Phrase);
-    LengthSearchPhrase := length (SearchPhrase);
-    counter := 1;
-    ResultPos := 0;
-    HowManyPos := 0;
-
-    while (counter <= LengthPhrase) and (HowManyPos < Ntuple) do
-    begin
-        temp := copy(Phrase, counter, LengthSearchPhrase);
-        if SearchPhrase = temp then
-        begin
-            ResultPos := counter;
-            HowManyPos := HowManyPos + 1;
-        end;
-        counter := counter + 1;
-    end;    
-
-    NPos := ResultPos;
-end;
-*)
+(* Updates the APPEND environment variable, in order to use subdirectories in
+*  MSX-DOS 2. *)
 
 procedure CheatAPPEND (FileName: TString);
 var
-    i, FirstTwoDotsFound, LastBackSlashFound: byte;
+    FirstTwoDotsFound, LastBackSlashFound: byte;
     APPEND: string[7];
-    Path, Temporary: TString;
-    Registers: TRegs;
-    
+        
 begin
 
 (* Initializing some variables... *)
     fillchar(Path, sizeof(Path), ' ' );
-    fillchar(Temporary, sizeof(Temporary), ' ' );
+    fillchar(temp, sizeof(temp), ' ' );
     APPEND[0] := 'A';   APPEND[1] := 'P';   APPEND[2] := 'P';
     APPEND[3] := 'E';   APPEND[4] := 'N';   APPEND[5] := 'D';
     APPEND[6] := #0;
@@ -138,7 +133,7 @@ begin
 (*  Sees if in the path there is a ':', used with drive letter. *)    
     FirstTwoDotsFound := Pos (chr(58), FileName);
 
-(*  If there is a two dots...  *)
+(*  If there are two dots...  *)
     if FirstTwoDotsFound <> 0 then
     begin
     
@@ -148,31 +143,37 @@ begin
 
 (*  Copy the path to the variable. *)
         for i := 1 to LastBackSlashFound - 1 do
-            Temporary[i - 1] := Path[i];
-        Temporary[LastBackSlashFound] := #0;
-        Path := Temporary;
+            temp[i - 1] := Path[i];
+        temp[LastBackSlashFound] := #0;
+        Path := temp;
 
 (*  Sets the APPEND environment variable. *)
-        with Registers do
+        with regs do
         begin
             B := sizeof (Path);
             C := ctSetEnvironmentItem;
             HL := addr (APPEND);
             DE := addr (Path);
         end;
-        MSXBDOS (Registers);
+        MSXBDOS (regs);
     end;
 end;
+
+(* Sets Z80 mode in MSX Turbo-R. *)
 
 procedure TRZ80mode;
 begin
     inline($3e/$00/$fd/$2a/$c0/$fc/$dd/$21/$80/$01/$cd/$1c/$00/$fb);
 end;
 
+(* Sets R800 mode in MSX Turbo-R. *)
+
 procedure TRR800mode;
 begin
     inline($3e/$00/$fd/$2a/$c0/$fc/$dd/$21/$80/$01/$cd/$1c/$00/$fb);
 end;
+
+(* Moves text from RAM to VRAM. *)
 
 procedure FromRAMToVRAM(var tempstr: TString; linenumber: integer);
 begin
@@ -180,11 +181,15 @@ begin
         WriteVRAM(VRAMBank, VRAMposition, addr(tempstr), maxcols);
 end;
 
+(* Moves text from VRAM to RAM. *)
+
 procedure FromVRAMToRAM(var tempstr: TString; linenumber: integer);
 begin
     with textlines[linenumber] do
         ReadVRAM(VRAMBank, VRAMposition, addr(tempstr), maxcols);
 end;
+
+(* Initializes the VRAM buffer and all structed variables which are related. *)
 
 procedure InitVRAM(linenumber: integer; var counter: real);
 begin
@@ -212,11 +217,9 @@ begin
     emptylines[linenumber] := true;
 end;
 
-function SearchForBlankBlock(BlankLines: integer): integer;
-var
-    i, k: integer;
-    LastPosition: boolean;
+(* Search for a blank block into VRAM. *)
 
+Function SearchForBlankBlock(BlankLines: integer): integer;
 begin
     i := 0;
     k := 0;
@@ -234,42 +237,41 @@ begin
     SearchForBlankBlock := i - BlankLines;
 end;   
 
+(* Insert some lines into text, into VRAM. *)
+
 procedure InsertLinesIntoText(CurrentLine   : integer;
                             var TotalLines  : integer;
                                 BlankLines  : integer); 
-var
-    i, NewBeginBlock: integer;
-    
 begin
 
-(*  Move o bloco de texto, até o fim, BlankLines para baixo. *)
+(*  Moves the text block, BlankLines, till the end. *)
     i := (TotalLines + 1) - CurrentLine;
     Move(textlines[CurrentLine], textlines[CurrentLine + BlankLines],
         sizeof(textlines[BlankLines]) * i);
 
-(*  Bloqueia as linhas novas, de forma que na busca por trechos em
-*   branco, elas não sejam consideradas. *)
+(*  Blocks the new lines which were created, so when the program searches for
+*   blank blocks, they won't be considered. *)
     for i := (TotalLines + 1) to (TotalLines + BlankLines) do 
         emptylines[i] := false;
 
-(*  Procura por blocos vazios do tamanho exato que precisamos, para 
-*   redirecionar o bloco de texto na VRAM. *)
+(*  Searches for blank blocks which has the needed exact size, so the text block
+*   could be redirected into the VRAM. *)
     NewBeginBlock := SearchForBlankBlock(BlankLines);
 
     for i := (CurrentLine + 1) to (CurrentLine + BlankLines) do 
     begin
 
-(*  Reposiciona, na tabela de alocações, o bloco de texto da VRAM. *)
+(*  Redirects the text block into VRAM - in the allocation table. *)
         textlines[i].VRAMBank       := textlines[NewBeginBlock + 
                                     (i - CurrentLine) + 1].VRAMBank;
         textlines[i].VRAMPosition   := textlines[NewBeginBlock + 
                                     (i - CurrentLine) + 1].VRAMPosition;
     end;
 
-(*  Novo máximo, acrescido de BlankLines. *)
+(*  New maximum, which has the last line, added with BlankLines. *)
     TotalLines := TotalLines + BlankLines;
 
-(*  Marca no vetor emptylines, que essas linhas estão bloqueadas. *)
+(*  In the emptylines structed variable, these lines should be blocked. *)
     for i := (CurrentLine + 1) to TotalLines do
         emptylines[i] := false;
 end;
@@ -277,96 +279,24 @@ end;
 procedure DeleteLinesFromText(CurrentLine: integer;
                             var TotalLines: integer;
                                 DeletedLines: integer); 
-var
-    i, NewBeginBlock: integer;
-    
 begin
 
-(*  Move o bloco de texto, até o fim, DeletedLines para cima. *)
+(*  Moves the text block, DeletedLines, till the end. *)
     i := TotalLines - CurrentLine;
     Move(textlines[CurrentLine + DeletedLines], textlines[CurrentLine],
         sizeof(textlines[DeletedLines]) * i);
 
-(*  Libera as linhas novas no final, de forma que na busca por trechos
-*   em branco, elas sejam consideradas. *)
+(*  Frees the new lines in the end, so blank blocks can be considered. *)
     for i := (TotalLines - DeletedLines) to TotalLines do 
         emptylines[i] := true;
 
-(*  Novo máximo, acrescido de BlankLines. *)
+(*  New maximum, which has the last line, added with BlankLines. *)
     TotalLines := TotalLines - DeletedLines;
 end;
 
-procedure ClearStatusLine;
-begin
-    ClearBlink(1, maxlength + 1, maxwidth + 2);
-    FillChar(temp, maxwidth + 3, #23);
-    temp[1]             := #26;
-    temp[maxwidth + 2]  := #27;
-    WriteVRAM(0, (maxwidth + 2) * maxlength, Addr(temp[1]), maxwidth + 3);
-end;
-
-procedure CommandLine (KindOf: byte);
-(*
-*  1 - Version
-*  2 - Help
-*)
-
-begin
-    clrscr;
-    FastWriteln('              ##     mmmm      mmmm         ##    ');
-    FastWriteln('              ""     ""##      ""##         ""    ');
-    FastWriteln(' ####m##m   ####       ##        ##       ####    ');
-    FastWriteln(' ## ## ##     ##       ##        ##         ##    ');
-    FastWriteln(' ## ## ##     ##       ##        ##         ##    ');
-    FastWriteln(' ## ## ##  mmm##mmm    ##mmm     ##mmm   mmm##mmm ');
-    FastWriteln(' "" "" ""  """"""""     """"      """"   """""""" ');
-
-    case KindOf of
-        1: begin (* Version *)
-                FastWriteln('Version 0.7 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
-                FastWriteln('Some rights reserved (not many!).');
-                writeln;
-                FastWriteln('This editor resembles the GNU nano editor, with the same');
-                FastWriteln('look and feel and many of the same keystrokes.');
-                writeln;
-                FastWriteln('It''s licensed under the GPLv3+ license. Yep, free software.');
-                FastWriteln('You are free to change and redistribute it. But don''t ask me');
-                FastWriteln('about any warranties... Use it at your own risk.');
-                FastWriteln('http://www.nano-editor.org http://gnu.org/licenses/gpl.html');
-                writeln;
-                FastWriteln('By the way, ''milli'' may came from two places:');
-                FastWriteln('1) Unit prefix in the metric system - factor of 1/1000.');
-                FastWriteln('2) Milliways, the restaurant at the end of the Universe, from');
-                FastWriteln('The Hitchhiker''s Guide to the Galaxy book series.');
-                FastWriteln('Personally, I would prefer the last one. ');
-            end;
-        2: begin (* Help *)
-                FastWriteln('Usage: milli <file> <parameters>');
-                FastWriteln('Text editor.');
-                writeln;
-                FastWriteln('File: Text file which will be edited.');
-                writeln;
-                FastWriteln('Parameters: ');
-{    
-    FastWriteln('/b      - Save backups of existing files.');
-    FastWriteln('/e      - Convert typed tabs to spaces.');
-}
-                FastWriteln('/l<l>   - Start at line l.');
-                FastWriteln('/c<c>   - Start at column c.');
-                FastWriteln('/t<n>   - Make a tab this number (n) of columns wide.');
-                FastWriteln('/h      - Show this help text and exit.');
-                FastWriteln('/v      - Output version information and exit.');
-                writeln;
-            end;
-        end;
-    ClearAllBlinks;
-    halt;
-end;
+(*  Copy text blocks from one region to another, into VRAM. *)
 
 procedure CopyBlock(FirstLineBlock, LastLineBlock, FirstLineCopy: integer);
-var
-    i: integer;
-
 begin
     for i := FirstLineBlock to LastLineBlock do
     begin
@@ -374,3 +304,5 @@ begin
         emptylines  [FirstLineCopy + i - FirstLineBlock]    := false;
     end;
 end;
+
+

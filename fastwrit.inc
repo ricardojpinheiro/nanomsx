@@ -42,7 +42,7 @@ End; {FastWrite}
 
 Procedure FastWriteln (St: TString);
 Begin
-	FastWrite (St);
+    FastWrite (St);
     CSRY := ((VramLocation + Len) Div Width) + 2;
     CSRX := 1;
 End; {FastWriteln}

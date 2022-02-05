@@ -3,71 +3,98 @@
 *  So, some routines were taken from the main program to be placed here.
 *)
 
-var
-    ScreenStatus:                   TScreenStatus;
-    EditWindowPtr:                  Pointer;
-    MSXDOSversion:                  TMSXDOSVersion;
+(* Clears the status line. *)
+
+procedure ClearStatusLine;
+begin
+    ClearBlink(1, maxlength + 1, maxwidth + 2);
+    FillChar(temp, maxwidth + 3, #23);
+    temp[1]             := #26;
+    temp[maxwidth + 2]  := #27;
+    WriteVRAM(0, (maxwidth + 2) * maxlength, Addr(temp[1]), maxwidth + 3);
+end;
+
+(* Shows a help when milli is executed with /h or /v. *)
+
+procedure CommandLine (KindOf: byte);
+(*
+*  1 - Version
+*  2 - Help
+*)
+
+begin
+    clrscr;
+    FastWriteln('              ##     mmmm      mmmm         ##    ');
+    FastWriteln('              ""     ""##      ""##         ""    ');
+    FastWriteln(' ####m##m   ####       ##        ##       ####    ');
+    FastWriteln(' ## ## ##     ##       ##        ##         ##    ');
+    FastWriteln(' ## ## ##     ##       ##        ##         ##    ');
+    FastWriteln(' ## ## ##  mmm##mmm    ##mmm     ##mmm   mmm##mmm ');
+    FastWriteln(' "" "" ""  """"""""     """"      """"   """""""" ');
+
+    case KindOf of
+        1: begin (* Version *)
+                FastWriteln('Version 0.7 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
+                FastWriteln('Some rights reserved (not many!).');
+                writeln;
+                FastWriteln('This editor resembles the GNU nano editor, with the same');
+                FastWriteln('look and feel and many of the same keystrokes.');
+                writeln;
+                FastWriteln('It''s licensed under the GPLv3+ license. Yep, free software.');
+                FastWriteln('You are free to change and redistribute it. But don''t ask me');
+                FastWriteln('about any warranties... Use it at your own risk.');
+                FastWriteln('http://www.nano-editor.org http://gnu.org/licenses/gpl.html');
+                writeln;
+                FastWriteln('By the way, ''milli'' may came from two places:');
+                FastWriteln('1) Unit prefix in the metric system - factor of 1/1000.');
+                FastWriteln('2) Milliways, the restaurant at the end of the Universe, from');
+                FastWriteln('The Hitchhiker''s Guide to the Galaxy book series.');
+                FastWriteln('Personally, I would prefer the last one. ');
+            end;
+        2: begin (* Help *)
+                FastWriteln('Usage: milli <file> <parameters>');
+                FastWriteln('Text editor.');
+                writeln;
+                FastWriteln('File: Text file which will be edited.');
+                writeln;
+                FastWriteln('Parameters: ');
+{    
+    FastWriteln('/b      - Save backups of existing files.');
+    FastWriteln('/e      - Convert typed tabs to spaces.');
+}
+                FastWriteln('/l<l>   - Start at line l.');
+                FastWriteln('/c<c>   - Start at column c.');
+                FastWriteln('/t<n>   - Make a tab this number (n) of columns wide.');
+                FastWriteln('/h      - Show this help text and exit.');
+                FastWriteln('/v      - Output version information and exit.');
+                writeln;
+            end;
+        end;
+    ClearAllBlinks;
+    halt;
+end;
+
+(* Turn on the cursor - uses blink table. *)
 
 Procedure CursorOn;
 Begin
     BlinkChar(column + 1, screenline + 1);
 End;
 
+(* Turn off the cursor - uses blink table. *)
+
 Procedure CursorOff;
 Begin
     ClearBlinkChar(column + 1, screenline + 1);
 End;
 
-Function ReadString (MaxLen: Byte): TString;
-Var
-	i:	Byte;
-	Ch:	Char;
-	St: TString;
-Begin
-	fillchar(st, sizeof(st), chr(32));
-	i := 0;
-	Repeat
-		ch := readkey;
-		Case Ch Of
-			#30..#126,#128..#255:	Begin
-										If i < Maxlen Then
-										Begin
-											i := i + 1;
-											Write(Ch);
-											St := St + Ch;
-										End
-										Else
-											Write(#7);
-									End;
-			#8: 					Begin
-										If i > 0 Then
-										Begin
-											i := i-1;
-											Write(Ch);
-											Write(' ');
-											Write(Ch);
-											St[0] := Chr(i);
-										End
-										Else
-											Write(#7);
-									End;
-		End; {Case}
-
-	Until Ch = #13;
-
-    ReadString := St;
-End; {ReadString}
-
 procedure GetKey (var key: byte; var iscommand: boolean);
-var
-    inkey: char;
-
 (* Return true if a key waiting, and the key. *)
 
 begin
     iscommand   := false;
-    inkey       := readkey;
-    key         := ord(inkey);
+    c       	:= readkey;
+    key         := ord(c);
 
     if key in NoPrint then
         iscommand := true;
@@ -87,27 +114,21 @@ begin
 end;
 
 procedure StatusLine (message: TString);
-var
-    lengthmessage, position: byte;
-    
 begin
     ClearStatusLine;
 
     message         := concat('[ ', message, ' ]');
     lengthmessage   := length(message);
-    position        := (maxwidth - lengthmessage) div 2;
+    ranking        	:= (maxwidth - lengthmessage) div 2;
 
-    GotoXY(position, maxlength + 1);
+    GotoXY(ranking, maxlength + 1);
     FastWrite(message);
-    Blink(position, maxlength + 1, lengthmessage);
+    Blink(ranking, maxlength + 1, lengthmessage);
 end;
 
 procedure DisplayKeys (whichkey: KeystrokeLines);
 var
     BlinkSequence: 	array [1..6] of byte;
-    Line1, Line2: 	TString;
-    BlinkLength: 	byte;
-    
 begin
     for i := 2 to 3 do
         ClearBlink(1, maxlength + i, maxwidth);
@@ -186,9 +207,6 @@ begin
 end;
 
 procedure InitStructures;
-var
-    counter:    real;
-
 begin
 	BlockMarked	:= false;
     counter		:= startvram;
@@ -240,6 +258,8 @@ end;
 procedure InitMainScreen;
 begin
     EditWindowPtr := MakeWindow(0, 1, maxwidth + 2, maxlength + 1, chr(32));
+
+	ClrWindow (EditWindowPtr);
 
     GotoXY(3, 1);
     FastWrite('milli 0.7');
@@ -612,11 +632,6 @@ begin
 end;
 
 procedure WhereIs (direction: Directions; nextoccurrence: boolean);
-var
-    pointer, len        : integer;
-    tempsearchstring    : TString;
-    stopsearch          : integer;
- 
 begin
     DisplayKeys (search);
 
@@ -659,17 +674,17 @@ begin
         FromVRAMToRAM(line, i);        
     
 (* look for matches on this line *)
-        pointer := pos (searchstring, line);
+        point := pos (searchstring, line);
 
 (* if there was a match then get ready to print it *)
-        if (pointer > 0) then
+        if (point > 0) then
         begin
             currentline := i;
             if currentline >= maxlength then
                 screenline := maxlength - 1
             else
                 screenline := currentline;
-            column := pointer;
+            column := point;
             DrawScreen(currentline, screenline, 1);
             
 (* Redraw the StatusLine, bottom of the window and display keys *)
@@ -775,12 +790,6 @@ begin
 end;
 
 procedure Location (Types: LocationOptions);
-var
-    totalwords              : integer;
-    abovechar, totalchar, 
-    percentchar             : real;
-    temp2                   : TString;
-
 begin
     FillChar(temp, sizeof(temp), chr(32));
 (*  Line count - Percentage. *)    
@@ -846,14 +855,14 @@ begin
     if Types = HowMany then
     begin
         totalwords  := 0;
-        FillChar(temp2, sizeof(temp2), chr(32));
+        FillChar(Line2, sizeof(Line2), chr(32));
 
         for i := 1 to highestline do
         begin
-            FillChar(temp2, sizeof(temp2), chr(32));
-            FromVRAMToRAM(temp2, i);
-            for j   := 1 to length(temp2) do
-                if (temp2[j] = chr(32)) and (ord(temp2[j + 1]) in Print)
+            FillChar(Line2, sizeof(Line2), chr(32));
+            FromVRAMToRAM(Line2, i);
+            for j   := 1 to length(Line2) do
+                if (Line2[j] = chr(32)) and (ord(Line2[j + 1]) in Print)
                     and (j > 1) then
                     TotalWords := TotalWords + 1;
         end;

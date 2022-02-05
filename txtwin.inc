@@ -21,7 +21,6 @@ Const
     HORIZONTAL = #23;
 
 Var 
-    Count:		Integer;
     a, b:		Byte;
 
 Begin
@@ -40,42 +39,40 @@ Begin
         Vram    := Vram     + 80;
         Ram     := Ram      + Width;
     End;
-    FillChar(St, sizeof(St), chr(32));
+    FillChar(Line1, sizeof(Line1), chr(32));
     a := (Width - Length(Header)) Div 2;
     For b := 1 To Length(Header) Do
-        St[a + b] := Header[b];
-    St[1]       := ULC;
-    St[Width]   := URC;
+        Line1[a + b] := Header[b];
+    Line1[1]       := ULC;
+    Line1[Width]   := URC;
     Vram := (Row - 1) * 80 + Col;
-    WriteVram(0, Vram, Addr(St[1]), Width);
+    WriteVram(0, Vram, Addr(Line1[1]), Width);
 
-    FillChar(St, 81, 32); {Fill with space }
-    St[1]       := VERTICAL;
-    St[Width]   := VERTICAL;
+    FillChar(Line1, 81, 32); {Fill with space }
+    Line1[1]       := VERTICAL;
+    Line1[Width]   := VERTICAL;
     Vram        := Vram + 80;
     For Count := 2 to height - 1 Do
     Begin
-        WriteVram(0, Vram, Addr(St[1]), Width);
+        WriteVram(0, Vram, Addr(Line1[1]), Width);
         Vram := Vram + 80;
     End;
 
-    FillChar(St, 81, Horizontal); {Fill with horizontal line }
-    St[1]       := DLC;
-    St[Width]   := DRC;
-    WriteVram(0, Vram, Addr(St[1]), Width);
+    FillChar(Line1, 81, Horizontal); {Fill with horizontal line }
+    Line1[1]       := DLC;
+    Line1[Width]   := DRC;
+    WriteVram(0, Vram, Addr(Line1[1]), Width);
 
     MakeWindow := pt;
 End;  {MakeWindow}
 
-Procedure EraseWindow(WindowPtr:Pointer);
-Var 
-	Count:	Integer;
-
+Procedure EraseWindow(WindowPtr: Pointer);
 Begin
-	pt := WindowPtr;
-	Vram := (Mem[at+1]-1)*80 + Mem[at];
-	Width := Mem[at+2]; Height := Mem[at+3];
-	Ram := at + 6;
+	pt 		:= WindowPtr;
+	Vram 	:= (Mem[at+1]-1)*80 + Mem[at];
+	Width 	:= Mem[at+2];
+	Height 	:= Mem[at+3];
+	Ram 	:= at + 6;
 
 	For Count := 1 To Height Do
 	Begin
@@ -86,47 +83,47 @@ Begin
 	FreeMem(WindowPtr,Width*Height+6);
 End; { EraseWindow }
 
-Procedure ScrollWindowUp(WindowPtr:Pointer);
+Procedure ScrollWindowUp(WindowPtr: Pointer);
 Var 
-	i,Count:	Byte;
+	i:	Byte;
 
 Begin
-	pt   := WindowPtr;
-	Ram  := Addr(St);
-	Vram := mem[at] + 1 + Mem[at+1]*80 ;
-	Count := Mem[at+2]-2;
+	pt   	:= WindowPtr;
+	Ram  	:= Addr(Line1);
+	Vram 	:= mem[at] + 1 + Mem[at+1]*80 ;
+	Byt 	:= Mem[at+2]-2;
 
 	For i := 1 to Mem[at+3]-3 Do
 	Begin
-		ReadVram(0,vram+80,Ram,Count);
-        WriteVram(0,Vram,Ram,Count);
+		ReadVram(0,vram+80,Ram,Byt);
+        WriteVram(0,Vram,Ram,Byt);
         Vram := Vram + 80;
 	End;
 
-	FillChar(st,80,32);
-	WriteVram(0,Vram,Ram,Count);
+	FillChar(Line1,80,32);
+	WriteVram(0,Vram,Ram,Byt);
 
 End; {ScrollWindowUp }
 
 Procedure ScrollWindowDown(WindowPtr:Pointer);
 Var
-	i,Count:	Byte;
+	i:	Byte;
 
 Begin
 	pt   := WindowPtr;
-	Ram  := Addr(St);
+	Ram  := Addr(Line1);
 	Vram := mem[at] + 1 + (Mem[at+1]+mem[at+3]-3) *80 ;
-	Count := Mem[at+2]-2;
+	Byt := Mem[at+2]-2;
 
 	For i := 1 to Mem[at+3]-3 Do
 	Begin
-		ReadVram(0,vram-80,Ram,Count);
-        WriteVram(0,Vram,Ram,Count);
+		ReadVram(0,vram-80,Ram,Byt);
+        WriteVram(0,Vram,Ram,Byt);
         Vram := Vram - 80;
 	End;
 
-	FillChar(st,80,32);
-	WriteVram(0,Vram,Ram,Count);
+	FillChar(Line1,80,32);
+	WriteVram(0,Vram,Ram,Byt);
 
 End; {ScrollWindowDown }
 
@@ -144,54 +141,55 @@ end;    { WhereYWindow }
 
 Procedure DelLineWindow (WindowPtr: Pointer);
 Var
-	i, Count, CurRow, CurCol:	byte;
+	i, CurRow, CurCol:	byte;
 
 Begin
 	pt		:= WindowPtr;
-    Ram  	:= Addr(St);
+    Ram  	:= Addr(Line1);
     CurRow 	:= Mem[at + 5];
     CurCol 	:= Mem[at + 4] ;
     Vram 	:= Mem[at] + (Mem[at + 1] + CurRow - 1) * 80 + 1;
-    Count 	:= Mem[at + 2] - 2;
+    Byt 	:= Mem[at + 2] - 2;
 
 	For i := CurRow to Mem[at + 3] - 3 Do
 	Begin
-		ReadVram(0, vram + 80, Ram, Count);
-        WriteVram(0, Vram, Ram, Count);
+		ReadVram(0, vram + 80, Ram, Byt);
+        WriteVram(0, Vram, Ram, Byt);
         Vram := Vram + 80;
     End;
 
-    FillChar(st, 80, 32);
-    WriteVram(0, Vram, Ram, Count);
+    FillChar(Line1, 80, 32);
+    WriteVram(0, Vram, Ram, Byt);
 
   End; { DelLineWindow }
 
 Procedure InsLineWindow (WindowPtr: Pointer);
 Var
-    i, Count, CurRow, CurCol:	byte;
+    i, CurRow, CurCol:	byte;
 
 Begin
     pt   	:= WindowPtr;
-    Ram  	:= Addr(St);
+    Ram  	:= Addr(Line1);
     CurRow 	:= Mem[at + 5];
 	CurCol 	:= Mem[at + 4] ;
     Vram 	:= Mem[at] + (Mem[at + 1] + CurRow - 1) * 80 + 1;
     Vram 	:= mem[at] + 1 + (Mem[at + 1] + mem[at + 3] - 3) * 80;
-    Count 	:= Mem[at + 2] - 2;
+    Byt 	:= Mem[at + 2] - 2;
 
     For i := (CurRow - 1) to Mem[at + 3] - 3 Do
     Begin
-        ReadVram(0, vram - 80, Ram, Count);
-        WriteVram(0, Vram, Ram, Count);
+        ReadVram(0, vram - 80, Ram, Byt);
+        WriteVram(0, Vram, Ram, Byt);
         Vram := Vram - 80;
     End;
 
-    FillChar(st, 80, 32);
-    WriteVram(0, Vram, Ram, Count);
+    FillChar(Line1, 80, 32);
+    WriteVram(0, Vram, Ram, Byt);
 
 End; { InsLineWindow }
 
-Procedure _WriteWindowOperation(WindowPtr:Pointer; St :TString; LineFeed:Boolean);
+Procedure _WriteWindowOperation(WindowPtr: Pointer; St: TString;
+								LineFeed: Boolean);
 Label Out;
 Type WindowInfoType = Record
 		WinCol: 	Byte;   {The coordinates of upper left}

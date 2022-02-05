@@ -141,11 +141,15 @@ begin
     Blink(1, maxlength + 1, maxwidth + 2);
     temp := 'Save file? (Y/N)';
     FastWrite(temp);
-    c := readkey;
+    
+    c := chr(32);
+    
+    while ((c <> 'N') and (c <> 'Y')) do
+        c := upcase(readkey);
     
     ClearStatusLine;
     
-    if upcase(c) = 'Y' then
+    if c = 'Y' then
         WriteOut(true);
 
     EraseWindow(EditWindowPtr);
@@ -559,8 +563,11 @@ begin
 end;
 
 (* main *)
+
 begin
-    newline     := 1;   newcolumn   := 1;   tabnumber   := 8;
+    newline     := 1;
+    newcolumn   := 1;
+    tabnumber   := 8;
     AllChars    := [0..255];
     NoPrint     := [0..31, 127, 255];
     Print       := AllChars - NoPrint;
