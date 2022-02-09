@@ -181,9 +181,8 @@ Var
 	counter:    						real;
 
     BlockStart, BlockEnd, BlockDest,
-    NewBeginBlock:						integer;    
+    NewBeginBlock, totalwords:			integer;    
     
-	totalwords:							integer;
     abovechar, totalchar, percentchar:	real;
 
 	lengthmessage, ranking:				byte;
@@ -191,6 +190,6 @@ Var
 	destline, destcolumn: 				integer;
     
     
-    ScreenStatus:                   TScreenStatus;
-    EditWindowPtr:                  Pointer;
-    MSXDOSversion:                  TMSXDOSVersion;
+    ScreenStatus:						TScreenStatus;
+    EditWindowPtr:						Pointer;
+    MSXDOSversion:						TMSXDOSVersion;
