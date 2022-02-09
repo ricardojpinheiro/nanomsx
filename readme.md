@@ -1,4 +1,3 @@
-﻿
 # milli
 A GNU nano-like text editor for MSX 2.
 It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse&diff=1&id=Qed-Pascal), and our main approach is to have almost all useful GNU nano funcionalities.
@@ -47,14 +46,14 @@ It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse
  - SELECT+C - Copy block to line
  - SELECT+V - Move block to line
  - SELECT+F - Delete block
+ - SELECT+H - Unhide block
 
 ## To the future (features that I'm thinking about).
 - ~~Fix problems regarding the use of MSX 2's VRAM.~~
 - ~~Block routines, like copy/move/delete text blocks.~~
-- Visual references of marked blocks.
+- ~~Visual references of marked blocks.~~
 - Open two files simultaneously, and cut-copy-paste from one file to another.
 - Line numbering, which would be easier to everybody who wants to write some code.
 - Hide all elements of the interface (title bar, status bar, and help lines) and use all rows of the screen for showing the contents of the buffer. The status bar appears only when there is a significant message, and disappears slightly after or upon the next keystroke.
-
 
 MSX version by Ricardo Jurczyk Pinheiro - 2020/2022.
