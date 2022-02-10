@@ -37,10 +37,10 @@ Yes we can. There is a DSK file (download [here](https://github.com/ricardojpinh
 
 ### Screenshots.
 We all love screenshots! Who doesn't? Here it goes some of them:
-- [Milli's main screen](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli%20main%20screen.png)
-- [Milli's help page](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli%20help.png)
-- [Milli's command line help (/h)](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli%20command%20line%20help.png)
-- [Milli's command line version (/v)](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli%20version.png)
+- [Milli's main screen](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli_ma.png)
+- [Milli's help page](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli_he.png)
+- [Milli's command line help (/h)](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli_co.png)
+- [Milli's command line version (/v)](https://github.com/ricardojpinheiro/nanomsx/blob/main/milli_ve.png)
 
 ### Why 'milli'?
 The name may come from two places:
