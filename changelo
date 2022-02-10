@@ -1,3 +1,13 @@
+0.7 - 2022-02-09
+- Code reorganization, freed more memory space.
+- Able to unhide text blocks.
+
+0.5 - 2022-01-20
+- Able to manage text blocks: Mark beginning and end, copy, move and delete.
+
+0.3 - 2021-10-04
+- Bugs in edit mode where squashed.
+
 0.2 - 2021-09-09
 - Limit increased to text files with 1568 lines and 80 columns - almost all the MSX 2 VRAM.
 - Some nasty bugs squashed.

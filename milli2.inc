@@ -37,13 +37,12 @@ begin
                 FastWriteln('Version 0.7 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
                 FastWriteln('Some rights reserved (not many!).');
                 writeln;
-                FastWriteln('This editor resembles the GNU nano editor, with the same');
-                FastWriteln('look and feel and many of the same keystrokes.');
+                FastWriteln('This editor resembles the GNU nano editor (http://www.nano-editor.org),');
+                FastWriteln('with the same look and feel and many of the same keystrokes.');
                 writeln;
-                FastWriteln('It''s licensed under the GPLv3+ license. Yep, free software.');
-                FastWriteln('You are free to change and redistribute it. But don''t ask me');
-                FastWriteln('about any warranties... Use it at your own risk.');
-                FastWriteln('http://www.nano-editor.org http://gnu.org/licenses/gpl.html');
+                FastWriteln('It''s licensed under the GPLv3+ license. Yep, free software. You are free');
+                FastWriteln('to change and redistribute it. But don''t ask me about any warranties...');
+                FastWriteln('Use it at your own risk. http://gnu.org/licenses/gpl.html');
                 writeln;
                 FastWriteln('By the way, ''milli'' may came from two places:');
                 FastWriteln('1) Unit prefix in the metric system - factor of 1/1000.');
