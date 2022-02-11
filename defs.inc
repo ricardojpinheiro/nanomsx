@@ -167,7 +167,7 @@ Var
     key, screenline, column, 
     BlinkLength: 				        byte;
     tabset:                             array [1..maxwidth] of boolean;
-    textfile:                           text;
+    textfile, backuptextfile:			text;
     filename, searchstring, line, Path,
     tempsearchstring, replacestring,
     Line1, Line2:  						TString;

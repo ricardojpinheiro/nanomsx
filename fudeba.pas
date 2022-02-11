@@ -3,7 +3,7 @@ type
     linestring = string[255];
     
 var
-    S: linestring;
+    S, T: linestring;
     a, b, c, d: integer;
     tempnumber0, tempnumber1: string[6];
 
@@ -154,6 +154,13 @@ begin
 end;
 
 begin
+	S := 'TESTE.TXT';
+	writeln(pos(chr(46), S));
+	T := concat (copy (S, 1, pos(chr(46), S)), 'BAK');
+	writeln(S);
+	writeln(T);
+
+	exit;
     S := readstring;
     delete (s, 1, 1);
     a := Pos(chr(32), S);

@@ -34,7 +34,7 @@ begin
 
     case KindOf of
         1: begin (* Version *)
-                FastWriteln('Version 0.7 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
+                FastWriteln('Version 0.7.1 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
                 FastWriteln('Some rights reserved (not many!).');
                 writeln;
                 FastWriteln('This editor resembles the GNU nano editor (http://www.nano-editor.org),');
@@ -58,9 +58,9 @@ begin
                 writeln;
                 FastWriteln('Parameters: ');
 {    
-    FastWriteln('/b      - Save backups of existing files.');
     FastWriteln('/e      - Convert typed tabs to spaces.');
 }
+				FastWriteln('/b      - Save backups of existing files.');
                 FastWriteln('/l<l>   - Start at line l.');
                 FastWriteln('/c<c>   - Start at column c.');
                 FastWriteln('/t<n>   - Make a tab this number (n) of columns wide.');
@@ -261,7 +261,7 @@ begin
 	ClrWindow (EditWindowPtr);
 
     GotoXY(3, 1);
-    FastWrite('milli 0.7');
+    FastWrite('milli 0.7.1');
 
     Blink(2, 1, maxwidth);
     DrawScreen(currentline, screenline, 1);
@@ -393,7 +393,6 @@ begin
     GotoWindowXY(EditWindowPtr, column, screenline + 1);
     InsLineWindow(EditWindowPtr);
     InsertLinesIntoText (currentline - 1, highestline, 1);
-    highestline := highestline - 1;
 end;
 
 procedure Return;
@@ -519,7 +518,7 @@ begin
             FromVRAMToRAM(line, currentline + ((maxlength - 1) - screenline));
             if highestline > (currentline + ((maxlength - 1) - screenline)) then
                 quick_display(1, maxlength - 1, line);    
-        end
+        end;
 end;
 
 procedure PageUp;
@@ -729,9 +728,7 @@ begin
     aux := Pos(chr(32), searchstring);
     tempnumber0 := copy(searchstring, 1, aux - 1);
     tempnumber1 := copy(searchstring, aux + 1, length(searchstring));
-    
-    gotoxy (50, 1); writeln(tempnumber0, ' <---> ', tempnumber1);
-    
+
     val (tempnumber0, destline,     aux);
     val (tempnumber1, destcolumn,   aux);
 

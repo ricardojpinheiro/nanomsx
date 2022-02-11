@@ -81,6 +81,30 @@ begin
     DrawScreen(currentline, screenline, 1);
 end;
 
+procedure BackupFile;
+begin
+    StatusLine('Backup file in progress...');
+    Path := concat (copy (filename, 1, pos(chr(46), filename)), 'BAK');
+
+    assign(textfile,  filename);
+    assign(backuptextfile,    Path);
+    {$i-}
+    reset   (textfile);
+    rewrite (backuptextfile);
+    {$i+}
+
+    while not eof (textfile) do
+    begin
+        FillChar(line, sizeof(line), chr(32));
+        readln(textfile, line);
+        writeln(backuptextfile, line);
+    end;
+    
+    close(backuptextfile);
+    close(textfile);
+    ClearStatusLine;
+end;
+
 procedure WriteOut (AskForName: boolean);
 var
     tempfilename: TString;
@@ -590,7 +614,6 @@ begin
 
 (*  Init text editor routines and variables. *)    
     InitTextEditor;
-    InitMainScreen;
         
     if paramcount > 0 then
     begin
@@ -614,9 +637,14 @@ begin
                     'L': val(copy(temp, 1, length(temp)), newline,   rtcode);
                     'C': val(copy(temp, 1, length(temp)), newcolumn, rtcode);
                     'T': val(copy(temp, 1, length(temp)), tabnumber, rtcode);
+{
+                    'E': ConvertTabsToSpaces;
+}
                 end;
             end;
         end;
+        
+        InitMainScreen;
 
 (* The first parameter should be the file. *)
         filename    := paramstr(1);
@@ -624,6 +652,9 @@ begin
 (* Cheats the APPEND environment variable. *)    
         if (MSXDOSversion.nKernelMajor >= 2) then
             CheatAPPEND(filename);
+
+        if c = 'B' then
+            BackupFile;
         
 (* Reads file from the disk. *)
         ReadFile(false);
@@ -645,6 +676,7 @@ begin
     end
     else
     begin
+        InitMainScreen;
         InitStructures;
         currentline := 1;   highestline := 1;
         StatusLine('New file');
@@ -672,5 +704,6 @@ begin
         CheatAPPEND(chr(32));
 
     ClearAllBlinks;
-    TRZ80mode;
+    if msx_version = 4 then
+        TRZ80mode;
 end.
