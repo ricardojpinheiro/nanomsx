@@ -3,6 +3,8 @@
  * funcionalities. MSX version by Ricardo Jurczyk Pinheiro - 2020/2022.  *)
 
 program milli;
+var
+	maxlinesforreal: integer;
 
 {$i d:defs.inc}
 {$i d:conio.inc}
@@ -49,7 +51,7 @@ begin
     begin
         currentline := 1;
 
-        while not eof(textfile) and (currentline <= maxlines) do
+        while not eof(textfile) and (currentline <= maxlinesforreal) do
         begin
             FillChar(line, sizeof(line), chr(32));
             readln(textfile, line);
@@ -589,12 +591,13 @@ end;
 (* main *)
 
 begin
-    newline     := 1;
-    newcolumn   := 1;
-    tabnumber   := 8;
-    AllChars    := [0..255];
-    NoPrint     := [0..31, 127, 255];
-    Print       := AllChars - NoPrint;
+    newline     	:= 1;
+    newcolumn   	:= 1;
+    tabnumber   	:= 8;
+    maxlinesforreal	:= maxlines;
+    AllChars    	:= [0..255];
+    NoPrint     	:= [0..31, 127, 255];
+    Print       	:= AllChars - NoPrint;
 
 (*  If it's a MSX 1, exits. If it's a Turbo-R, turns on R800 mode.*)
     case msx_version of
@@ -632,11 +635,12 @@ begin
 
 (*  Parameters. *)
                 case c of
-                    'H': CommandLine(1);
-                    'V': CommandLine(2);
-                    'L': val(copy(temp, 1, length(temp)), newline,   rtcode);
-                    'C': val(copy(temp, 1, length(temp)), newcolumn, rtcode);
-                    'T': val(copy(temp, 1, length(temp)), tabnumber, rtcode);
+                    'V': CommandLine(1);
+                    'H': CommandLine(2);
+                    'L': val(copy(temp, 1, length(temp)), newline,   	rtcode);
+                    'C': val(copy(temp, 1, length(temp)), newcolumn, 	rtcode);
+                    'T': val(copy(temp, 1, length(temp)), tabnumber, 	rtcode);
+                    'Z': val(copy(temp, 1, length(temp)), maxlinesforreal, rtcode);
 {
                     'E': ConvertTabsToSpaces;
 }
