@@ -1,1 +1,27 @@
-changelo
+0.8 - 2022-08-14
+- Speed up milli's init, using a new parameter, /z<n>, where n is the maximum number of lines the file will have.
+
+0.7 - 2022-02-09
+- Milli's first stable release. 
+- Code polished and reorganized.
+- Include file (defs.inc) - organize all variables, constants and special types.
+- Fewer local variables, changed to global variables instead.
+- Earned more than 2500 free bytes.
+- If you want to know if there is a text block, you may press SELECT+H to unhide it.
+
+0.5 - 2022-01-20
+- Now, milli can manage text blocks: mark, copy, move and delete blocks. 
+- More bugs squashed.
+- Code cleaning, so there are a little more free memory (3 Kb, BTW)
+
+0.3 - 2021-10-04
+- There were some bugs in editing mode, so I found some time to fix them. Far from perfect, but it's in a steady walk.
+
+0.2 - 2021-09-09
+- Limit increased to text files with 1568 lines and 80 columns - almost all the MSX 2 VRAM.
+- Some nasty bugs squashed.
+
+0.1 - 2021-09-04
+- First public release.
+- Almost all routines runs smoothly.
+- Limited to text files with 346 lines with 80 columns each.
