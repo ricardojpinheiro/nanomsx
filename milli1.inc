@@ -225,7 +225,7 @@ begin
     k := 0;
     LastPosition := true;
 
-    while (i <= maxlines) and (k < BlankLines) do
+    while (i <= maxlinesforreal) and (k < BlankLines) do
     begin
         i := i + 1;
         if emptylines[i] = true then

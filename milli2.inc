@@ -34,7 +34,7 @@ begin
 
     case KindOf of
         1: begin (* Version *)
-                FastWriteln('Version 0.7.1 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
+                FastWriteln('Version 0.8 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
                 FastWriteln('Some rights reserved (not many!).');
                 writeln;
                 FastWriteln('This editor resembles the GNU nano editor (http://www.nano-editor.org),');
@@ -44,7 +44,7 @@ begin
                 FastWriteln('to change and redistribute it. But don''t ask me about any warranties...');
                 FastWriteln('Use it at your own risk. http://gnu.org/licenses/gpl.html');
                 writeln;
-                FastWriteln('By the way, ''milli'' may came from two places:');
+                FastWriteln('By the way, the ''milli'' name may come from two places:');
                 FastWriteln('1) Unit prefix in the metric system - factor of 1/1000.');
                 FastWriteln('2) Milliways, the restaurant at the end of the Universe, from');
                 FastWriteln('The Hitchhiker''s Guide to the Galaxy book series.');
@@ -64,6 +64,7 @@ begin
                 FastWriteln('/l<l>   - Start at line l.');
                 FastWriteln('/c<c>   - Start at column c.');
                 FastWriteln('/t<n>   - Make a tab this number (n) of columns wide.');
+                FastWriteln('/z<n>   - Tell milli the maximum number of lines that will be used.');
                 FastWriteln('/h      - Show this help text and exit.');
                 FastWriteln('/v      - Output version information and exit.');
                 writeln;
@@ -212,7 +213,7 @@ begin
 
 (*  Initialize structure. *)
     StatusLine('Initializing structures...');
-    for i := 1 to maxlines do
+    for i := 1 to maxlinesforreal do
     begin
         InitVRAM(i, counter); 
         counter := counter + maxcols;
@@ -220,8 +221,9 @@ begin
 
 (*  Erase VRAM banks, from startvram till the end. *)
     StatusLine('Wiping memory, please be patient...');
-    fillvram(0, startvram   , 0, $FFFF - startvram);
-    fillvram(1, 0           , 0, $FFFF);
+    fillvram(0, startvram, 0, (startvram + $50 * maxlinesforreal) - startvram);
+    if maxlinesforreal > 750 then
+		fillvram(1, 0 , 0, ($50 * ((maxlinesforreal + 1) - 750)));
     
     ClrWindow(EditWindowPtr);
     ClearStatusLine;
@@ -242,7 +244,6 @@ begin
 (*  Some variables. *)   
     currentline := 1; 		screenline := 1;        highestline := 1;
     column      := 1; 		insertmode  := false;   savedfile   := false;   
-    FillChar(filename,      sizeof(filename),       chr(32));
     FillChar(temp,          sizeof(temp),           chr(32));
     FillChar(filename,      sizeof(filename),       chr(32));
     FillChar(searchstring,  sizeof(searchstring),   chr(32));
@@ -261,7 +262,7 @@ begin
 	ClrWindow (EditWindowPtr);
 
     GotoXY(3, 1);
-    FastWrite('milli 0.7.1');
+    FastWrite('milli 0.8');
 
     Blink(2, 1, maxwidth);
     DrawScreen(currentline, screenline, 1);
