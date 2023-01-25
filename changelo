@@ -1,12 +1,25 @@
+0.8.1 - 2023-01-25
+- Squashed a bug using the TAB key.
+- Preserves the status of the function keys' line.
+
+0.8 - 2022-08-14
+- Speed up milli's init, using a new parameter, /z<n>, where n is the maximum number of lines the file will have.
+
 0.7 - 2022-02-09
-- Code reorganization, freed more memory space.
-- Able to unhide text blocks.
+- Milli's first stable release. 
+- Code polished and reorganized.
+- Include file (defs.inc) - organize all variables, constants and special types.
+- Fewer local variables, changed to global variables instead.
+- We got more 2500 free bytes.
+- If you want to know if there is a text block, you may press SELECT+H to unhide it.
 
 0.5 - 2022-01-20
-- Able to manage text blocks: Mark beginning and end, copy, move and delete.
+- Now, milli can manage text blocks: mark, copy, move and delete blocks. 
+- More bugs squashed.
+- Code cleaning, so there are a little more free memory (3 Kb, BTW)
 
 0.3 - 2021-10-04
-- Bugs in edit mode where squashed.
+- There were some bugs in editing mode, so I found some time to fix them. Far from perfect, but it's in a steady walk.
 
 0.2 - 2021-09-09
 - Limit increased to text files with 1568 lines and 80 columns - almost all the MSX 2 VRAM.
