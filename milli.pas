@@ -5,6 +5,7 @@
 program milli;
 var
 	maxlinesforreal: integer;
+	FnKeys: boolean;
 
 {$i d:defs.inc}
 {$i d:conio.inc}
@@ -186,7 +187,8 @@ begin
     
     InitFnKeys;
    
-    SetFnKeyStatus (true);
+    if FnKeys then
+		SetFnKeyStatus (true);
     Halt;
 end;
 

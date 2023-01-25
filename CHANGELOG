@@ -1,3 +1,7 @@
+0.8.1 - 2023-01-25
+- Squashed a bug using the TAB key.
+- Preserves the status of the function keys' line.
+
 0.8 - 2022-08-14
 - Speed up milli's init, using a new parameter, /z<n>, where n is the maximum number of lines the file will have.
 
@@ -6,7 +10,7 @@
 - Code polished and reorganized.
 - Include file (defs.inc) - organize all variables, constants and special types.
 - Fewer local variables, changed to global variables instead.
-- Earned more than 2500 free bytes.
+- We got more 2500 free bytes.
 - If you want to know if there is a text block, you may press SELECT+H to unhide it.
 
 0.5 - 2022-01-20

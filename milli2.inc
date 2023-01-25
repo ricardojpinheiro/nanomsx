@@ -34,7 +34,7 @@ begin
 
     case KindOf of
         1: begin (* Version *)
-                FastWriteln('Version 0.8 - Copyright (c) 2020-2022 Brazilian MSX Crew.');
+                FastWriteln('Version 0.8.1 - Copyright (c) 2020-2023 Brazilian MSX Crew.');
                 FastWriteln('Some rights reserved (not many!).');
                 writeln;
                 FastWriteln('This editor resembles the GNU nano editor (http://www.nano-editor.org),');
@@ -234,7 +234,10 @@ begin
     GetScreenStatus(ScreenStatus);
     
     if ScreenStatus.bFnKeyOn then
-        SetFnKeyStatus (false);
+		begin
+			FnKeys := ScreenStatus.bFnKeyOn;
+			SetFnKeyStatus (false);
+        end;
     
     ScreenWidth(80);
     ClearAllBlinks;
@@ -262,7 +265,7 @@ begin
 	ClrWindow (EditWindowPtr);
 
     GotoXY(3, 1);
-    FastWrite('milli 0.8');
+    FastWrite('milli 0.8.1');
 
     Blink(2, 1, maxwidth);
     DrawScreen(currentline, screenline, 1);
@@ -368,6 +371,9 @@ begin
     end
     else
         screenline := screenline - 1;
+        
+		gotoxy (70, 1); writeln (column, ' ', currentline);
+
 end;
 
 procedure CursorDown;
@@ -387,6 +393,9 @@ begin
         FromVRAMToRAM(line, currentline);
         quick_display(1, screenline, line);
     end;
+    
+		gotoxy (70, 1); writeln (column, ' ', currentline);
+
 end;
 
 procedure InsertLine;
@@ -428,6 +437,9 @@ begin
         CursorUp;
         EndLine;
     end;
+    
+		gotoxy (70, 1); writeln (column, ' ', currentline);
+
 end;
 
 procedure CursorRight;
@@ -439,6 +451,9 @@ begin
         CursorDown;
         column := 1;
     end;
+
+		gotoxy (70, 1); writeln (column, ' ', currentline);
+
 end;
 
 procedure ins;
@@ -595,10 +610,26 @@ begin
    CursorOff;
    if column < maxwidth + 1 then
    begin
-       repeat
-           column := column + 1;
-       until (tabset [column]= true) or (column = maxwidth + 1);
+		lengthmessage := column;
+		newcolumn := 0;
+		FillChar(Line1, sizeof(Line1), chr(32));
+		repeat
+			column 		:= column 		+ 1;
+			newcolumn 	:= newcolumn	+ 1;
+		until (tabset [column]= true) or (column = maxwidth + 1);
+
+		if insertmode then
+		begin
+			FillChar(line, sizeof(line), chr(32));
+			FromVRAMToRAM(line, currentline);
+			line := copy (line	, 1, lengthmessage - 1) + 
+					copy (Line1	, 1, newcolumn - 1) + 
+					copy (line	, lengthmessage, maxwidth);
+			quick_display(1, currentline, line);
+			FromRAMToVRAM(line, currentline);
+		end;
    end;
+   column := column - 1;
    CursorOn;
 end;
 
