@@ -10,6 +10,7 @@ There is a more beautiful presentation [here](http://ricardojpinheiro.github.io/
  - /la          - Start at line a.
  - /cb          - Start at column b.
  - /tn          - Make a tab this number (n) of columns wide.
+ - /zn   	- Tell milli the maximum number of lines that will be used (speeds up the launch process).
 
 ## Keystrokes already created
  - Control-S - Save current file
