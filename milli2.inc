@@ -34,7 +34,7 @@ begin
 
     case KindOf of
         1: begin (* Version *)
-                FastWriteln('Version 0.8.1 - Copyright (c) 2020-2023 Brazilian MSX Crew.');
+                FastWriteln('Version 0.8.2 - Copyright (c) 2020-2023 Brazilian MSX Crew.');
                 FastWriteln('Some rights reserved (not many!).');
                 writeln;
                 FastWriteln('This editor resembles the GNU nano editor (http://www.nano-editor.org),');
@@ -265,7 +265,7 @@ begin
 	ClrWindow (EditWindowPtr);
 
     GotoXY(3, 1);
-    FastWrite('milli 0.8.1');
+    FastWrite('milli 0.8.2');
 
     Blink(2, 1, maxwidth);
     DrawScreen(currentline, screenline, 1);
@@ -371,9 +371,6 @@ begin
     end
     else
         screenline := screenline - 1;
-        
-		gotoxy (70, 1); writeln (column, ' ', currentline);
-
 end;
 
 procedure CursorDown;
@@ -393,9 +390,6 @@ begin
         FromVRAMToRAM(line, currentline);
         quick_display(1, screenline, line);
     end;
-    
-		gotoxy (70, 1); writeln (column, ' ', currentline);
-
 end;
 
 procedure InsertLine;
@@ -437,9 +431,6 @@ begin
         CursorUp;
         EndLine;
     end;
-    
-		gotoxy (70, 1); writeln (column, ' ', currentline);
-
 end;
 
 procedure CursorRight;
@@ -451,9 +442,6 @@ begin
         CursorDown;
         column := 1;
     end;
-
-		gotoxy (70, 1); writeln (column, ' ', currentline);
-
 end;
 
 procedure ins;

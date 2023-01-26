@@ -206,7 +206,8 @@ Var
 	pt:					Integer;
 	at:					WindowInfoType;
 	WrtLen, LinLen, 
-	Bottom, StIndex:	Byte;
+	Bottom, StIndex, b:	Byte;
+	temp:				String[8];
 
 	Procedure FillRow(Var StringIndex:Byte);
 	Begin
@@ -261,6 +262,21 @@ Var
 
 
 Begin
+	FillChar(temp, sizeof(temp), chr(32));
+	
+	for b := 1 to 8 do
+		temp := temp + chr(32);
+
+	b := pos(chr(9), St);
+
+	while b <> 0 do
+	begin
+		delete(St, b, 1);
+		delete(St, sizeof(St) - length(temp), length(temp));
+		insert(temp, St, b);
+		b := pos(chr(9), St);
+	end;
+
 	pt := Addr(at);
     Inline($f3/$01/6/0/ $2a/WindowPtr/ $ed/$5b/ pt/$ed/$b0 );
     With at Do

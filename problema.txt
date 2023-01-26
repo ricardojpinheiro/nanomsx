@@ -1,5 +1,0 @@
-ENTER não insere uma linha nova em branco.
-ENTER no final da linha insere uma linha em branco ANTES, e não depois.
-Um primeiro BACKSPACE no primeiro caractere da linha reposiciona o cursor no fim da linha. Se você mover o cursor novamente até o início da linha e novamente pressionar BACKSPACE toda a linha desaparece e não é possível mais digitar.
-Para testar, você pode iniciar o milli e simplesmente pressionar BACKSPACE duas vezes.
-Se você pressionar HOME depois do primeiro BACKSPACE no primeiro caractere, a linha some (mas continua na memória). Se pressionar DEL, a linha é restaurada na tela (com exceção do caractere que foi deletado).
