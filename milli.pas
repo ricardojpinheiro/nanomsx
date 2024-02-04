@@ -309,27 +309,23 @@ procedure AlignText;
 var
     lengthline, k, blankspaces, l:  byte;
     justifyvector:                  array [1..maxwidth] of byte;
+	templine		 			 :  TString;
 
 begin
-    FillChar(line, sizeof(line), chr(32));
+    FillChar(line,  sizeof(line),  chr(32));
+    FillChar(templine, sizeof(templine), chr(32));
     FromVRAMToRAM(line, currentline);
+	FromVRAMToRAM(templine, currentline + 1);
        
     lengthline := length(line);
 	    
 (*  Remove blank spaces in the beginning and in the end of the line. *)
 
+(*	End of the line *)	
 	j := RUnlikePos  (#32, line) + 1;
-	i := UnlikePos   (#32, line) - 1;
 
-    if i > 1 then
-        delete(line, 1, i)
-    else
-        i := 0;
-        
-    if j < maxwidth then
-        delete(line, j, lengthline - j)
-    else
-        j := maxwidth;
+(*	Beginning of the line*)
+	i := UnlikePos   (#32, line) - 1;
 
     DisplayKeys(align);
     c := upcase(readkey);
@@ -349,7 +345,6 @@ begin
                 for i := 1 to blankspaces do
                     insert(#32, line, 1);
                 temp := 'Text aligned to the right.';
-                
              end;
                     
         #67: begin
@@ -397,24 +392,9 @@ begin
         StatusLine(temp);
 
     FromRAMToVRAM(line, currentline);
-    DrawScreen(currentline, screenline, 1);
-
-(*  Problema, gravidade baixa: O ideal é que ele só redesenhe a linha, e não a
-*   página toda. Mas no momento, não está funcionando. A ser resolvido depois.*)
-{
-    quick_display(1, currentline, line);
-
-    j := 1;
-    if upcase(c) = 'J' then
-
-        for i := (currentline + 1) to (maxlength - 1) do
-        begin
-            FillChar(line, sizeof(line), chr(32));
-            FromVRAMToRAM(line, i);
-            quick_display(1, screenline + j, line);
-            j := j + 1;
-        end;
-}
+    
+    quick_display(1, currentline	, line);
+    quick_display(1, currentline + 1, templine);
 end;
 
 procedure BlockHide(HideOrNot: boolean);
@@ -690,7 +670,6 @@ begin
 
     for i := 1 to maxwidth do
         tabset[i] := (i mod tabnumber) = 1;
-
     ins;
 
 (* main loop - get a key and process it *)

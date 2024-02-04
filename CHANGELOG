@@ -1,3 +1,6 @@
+0.8.3 - 2024-02-04
+- Squashed some bugs in the alignment function.
+
 0.8.2 - 2023-01-25
 - Squashed some bugs using the TAB key.
 - Preserves the status of the function keys' line.

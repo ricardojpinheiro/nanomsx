@@ -51,9 +51,10 @@ begin
 end;
 
 begin
-	frase := '     1  Alessandro Bezerra';
+	frase :='      1  Alessandro Bezerra                                 ';
 	writeln(frase);
+	writeln('123456789012345678901234567890123456789012345678901234567890');
 	writeln(length(frase));
-	writeln(' DifferentPos - espaco: ',  DifferentPos (#32, frase));
-	writeln('RDifferentPos - espaco: ', RDifferentPos (#32, frase));
+	writeln(' DifferentPos - espaco: ',  DifferentPos (' ', frase));
+	writeln('RDifferentPos - espaco: ', RDifferentPos (' ', frase));
 end.

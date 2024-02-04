@@ -34,14 +34,14 @@ begin
 
     case KindOf of
         1: begin (* Version *)
-                FastWriteln('Version 0.8.2 - Copyright (c) 2020-2023 Brazilian MSX Crew.');
+                FastWriteln('Version 0.8.3 - Copyright (c) 2020-2024 Brazilian MSX Crew.');
                 FastWriteln('Some rights reserved (not many!).');
                 writeln;
                 FastWriteln('This editor resembles the GNU nano editor (http://www.nano-editor.org),');
-                FastWriteln('with the same look and feel and many of the same keystrokes.');
+                FastWriteln('with the same look and feel and a lot of the same keystrokes.');
                 writeln;
                 FastWriteln('It''s licensed under the GPLv3+ license. Yep, free software. You are free');
-                FastWriteln('to change and redistribute it. But don''t ask me about any warranties...');
+                FastWriteln('to change and redistribute it. But don''t ask me about any warranties!');
                 FastWriteln('Use it at your own risk. http://gnu.org/licenses/gpl.html');
                 writeln;
                 FastWriteln('By the way, the ''milli'' name may come from two places:');
@@ -265,7 +265,7 @@ begin
 	ClrWindow (EditWindowPtr);
 
     GotoXY(3, 1);
-    FastWrite('milli 0.8.2');
+    FastWrite('milli 0.8.3');
 
     Blink(2, 1, maxwidth);
     DrawScreen(currentline, screenline, 1);
@@ -605,6 +605,8 @@ begin
 			column 		:= column 		+ 1;
 			newcolumn 	:= newcolumn	+ 1;
 		until (tabset [column]= true) or (column = maxwidth + 1);
+
+gotoxy(20, 1); write('column: ', column, ' newcolumn: ',newcolumn);
 
 		if insertmode then
 		begin

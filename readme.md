@@ -2,7 +2,7 @@
 A GNU nano-like text editor for MSX 2.
 It is based on [Qed-Pascal](http://texteditors.org/cgi-bin/wiki.pl?action=browse&diff=1&id=Qed-Pascal), and our main approach is to have almost all useful GNU nano funcionalities.
 
-There is a more beautiful presentation [here](http://ricardojpinheiro.github.io/nanomsx/), if you want to see a more comprehensive explanation, and some screenshots too.
+There is a beautiful presentation [here](http://ricardojpinheiro.github.io/nanomsx/), if you want to see a more comprehensive explanation, and some screenshots too (we love screenshots, don't we?).
 
 ## Command-line parameters
  - /h 		- Show command line help.
@@ -58,6 +58,6 @@ There is a more beautiful presentation [here](http://ricardojpinheiro.github.io/
 - ~~Visual references of marked blocks.~~
 - Open two files simultaneously, and cut-copy-paste from one file to another.
 - Line numbering, which would be easier to everybody who wants to write some code.
-- Hide all elements of the interface (title bar, status bar, and help lines) and use all rows of the screen for showing the contents of the buffer. The status bar appears only when there is a significant message, and disappears slightly after or upon the next keystroke.
+- Hide all elements of the interface (title bar, status bar, and help lines) and use all rows of the screen in order to see the buffer's contents. The status bar appears only when there is any messages, and disappears slightly after or upon the next keystroke.
 
-MSX version by Ricardo Jurczyk Pinheiro - 2020/2023.
+MSX version by Ricardo Jurczyk Pinheiro - 2020/2024.
