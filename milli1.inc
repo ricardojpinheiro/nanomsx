@@ -76,16 +76,16 @@ Function DifferentPos(Character: char; Phrase: TString): byte;
 (* Used only into AlignText procedure. *)
 
 begin
-    i := 1;
+    i := 0;
     Found := false;
 
     repeat
+		i := i + 1;
         if Phrase[i] <> Character then
         begin
             DifferentPos := i;
             Found := true;
         end;
-        i := i + 1;
     until (Found) or (i >= length(Phrase));
 
     if Not Found then DifferentPos := 0;

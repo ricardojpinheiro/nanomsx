@@ -830,7 +830,7 @@ begin
             j := 1;
 (*  Column count - Percentage. *)        
         str(column, tempnumber0);
-        str(j, tempnumber1);
+        str(j, 		tempnumber1);
         str((round(int((column*100)/j))) , tempnumber2);
     
         temp := concat( temp, ' col ',tempnumber0,'/',tempnumber1,
@@ -839,27 +839,38 @@ begin
 
 (*  Char count. *)
     abovechar := 0;
+    totalchar := 0;
     
-    for i := 1 to currentline - 1 do
-        abovechar := abovechar + length(line);
-
-    totalchar := abovechar;
+	for i := 1 to currentline - 1 do
+    begin
+		FillChar(Line2, sizeof(Line2), chr(32));
+        FromVRAMToRAM(Line2, i);
+		abovechar := abovechar + length(Line2);
+	end;
+	
+    totalchar := abovechar;	
     abovechar := abovechar + column;
     
     for i := currentline to highestline do
-        totalchar := totalchar + length(line);
+    begin
+		FillChar(Line2, sizeof(Line2), chr(32));
+        FromVRAMToRAM(Line2, i);
+        totalchar := totalchar + length(Line2);
+	end;
 
     if totalchar = 0 then
         totalchar := 1;
     
 (*  Char count - percentage. *)
-    str(abovechar:6:0                   ,   tempnumber0);
-    str(totalchar:6:0                   ,   tempnumber1);
+    str(abovechar:6:1,   tempnumber0);
+    str(totalchar:6:1,   tempnumber1);
 
     str((round(int((abovechar*100)/totalchar))),   tempnumber2);
-    
+
     delete(tempnumber0  , 1, RPos(' ', tempnumber0) - 1);
     delete(tempnumber1  , 1, RPos(' ', tempnumber1) - 1);
+    delete(tempnumber0  , Pos('.', tempnumber0), Length(tempnumber0));
+    delete(tempnumber1  , Pos('.', tempnumber1), Length(tempnumber1));
 
     if Types = Position then
         temp := concat( temp, ' char ', tempnumber0,'/', tempnumber1,

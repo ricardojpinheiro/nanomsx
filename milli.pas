@@ -320,6 +320,8 @@ begin
     i := DifferentPos   (chr(32), line) - 1; 
     j := RDifferentPos  (chr(32), line) + 1;
 
+gotoxy (40,1); write (i,' ', line, ' ', j);
+
     if i > 1 then
         delete(line, 1, i)
     else
@@ -331,6 +333,8 @@ begin
         j := maxwidth;
 
     lengthline := length(line);
+
+exit;
 
     DisplayKeys(align);
     c := upcase(readkey);
@@ -349,8 +353,9 @@ begin
                 blankspaces := (maxwidth - lengthline);
                 for i := 1 to blankspaces do
                     insert(#32, line, 1);
-                    temp := 'Text aligned to the right.';
-                end;
+                temp := 'Text aligned to the right.';
+                
+             end;
                     
         #67: begin
 (* center - C *)
