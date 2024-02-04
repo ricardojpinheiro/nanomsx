@@ -26,25 +26,25 @@ End;
 
 Procedure FastWrite (St: TString);
 var
-	b: byte;
-	temp: string[8];
-	
+    b: byte;
+    temp: string[8];
+    
 Begin
-	FillChar(temp, sizeof(temp), chr(32));
-	
-	for b := 1 to 8 do
-		temp := temp + chr(32);
+    FillChar(temp, sizeof(temp), chr(32));
+    
+    for b := 1 to 8 do
+        temp := temp + chr(32);
 
-	b := pos(chr(9), St);
+    b := pos(chr(9), St);
 
-	while b <> 0 do
-	begin
-		delete(St, b, 1);
-		delete(St, sizeof(St) - length(temp), length(temp));
-		insert(temp, St, b);
-		b := pos(chr(9), St);
-	end;
-	
+    while b <> 0 do
+    begin
+        delete(St, b, 1);
+        delete(St, sizeof(St) - length(temp), length(temp));
+        insert(temp, St, b);
+        b := pos(chr(9), St);
+    end;
+    
     Width := Mem[$F3B0];
     If Width < 80 then
         Width := 40

@@ -313,14 +313,13 @@ var
 begin
     FillChar(line, sizeof(line), chr(32));
     FromVRAMToRAM(line, currentline);
-        
+       
     lengthline := length(line);
-    
+	    
 (*  Remove blank spaces in the beginning and in the end of the line. *)
-    i := DifferentPos   (chr(32), line) - 1; 
-    j := RDifferentPos  (chr(32), line) + 1;
 
-gotoxy (40,1); write (i,' ', line, ' ', j);
+	j := RUnlikePos  (#32, line) + 1;
+	i := UnlikePos   (#32, line) - 1;
 
     if i > 1 then
         delete(line, 1, i)
@@ -331,10 +330,6 @@ gotoxy (40,1); write (i,' ', line, ' ', j);
         delete(line, j, lengthline - j)
     else
         j := maxwidth;
-
-    lengthline := length(line);
-
-exit;
 
     DisplayKeys(align);
     c := upcase(readkey);
@@ -370,7 +365,7 @@ exit;
                 j := 1;
                         
 (*  Find all blank spaces in the phrase and save their positions. *)
-                for i := 1 to (RDifferentPos(chr(32), line)) do
+                for i := 1 to (RUnlikePos(chr(32), line)) do
                     if ord(line[i]) = 32 then
                     begin
                         justifyvector[j] := i;

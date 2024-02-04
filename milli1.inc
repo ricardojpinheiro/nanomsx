@@ -71,7 +71,7 @@ end;
 
 (*  Finds the first occurence of a char which is different into a string. *)
 
-Function DifferentPos(Character: char; Phrase: TString): byte;
+Function UnlikePos (Character: char; Phrase: TString): byte;
 
 (* Used only into AlignText procedure. *)
 
@@ -83,17 +83,17 @@ begin
 		i := i + 1;
         if Phrase[i] <> Character then
         begin
-            DifferentPos := i;
+            UnlikePos := i;
             Found := true;
         end;
     until (Found) or (i >= length(Phrase));
 
-    if Not Found then DifferentPos := 0;
+    if Not Found then UnlikePos := 0;
 end;
 
 (*  Finds the last occurence of a char which is different into a string. *)
 
-Function RDifferentPos(Character: char; Phrase: TString): integer;
+Function RUnlikePos(Character: char; Phrase: TString): integer;
 
 (* Used only into AlignText procedure. *)
     
@@ -104,13 +104,13 @@ begin
     repeat
         if Phrase[i] <> Character then
         begin
-            RDifferentPos := i;
+            RUnlikePos := i;
             Found := true;
         end;
         i := i - 1;
     until Found or (i <= 1);
 
-    if Not Found then RDifferentPos := 0;
+    if Not Found then RUnlikePos := 0;
 end;
 
 (* Updates the APPEND environment variable, in order to use subdirectories in

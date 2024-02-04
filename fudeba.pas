@@ -23,8 +23,8 @@ begin
 end;
 
 begin
-	FillChar(St, sizeof(St), chr(32));
-	St := '	F	U	D	E	B	A	.	X';
-	
-	FastWrite(St);
+    FillChar(St, sizeof(St), chr(32));
+    St := ' F   U   D   E   B   A   .   X';
+    
+    FastWrite(St);
 end.
